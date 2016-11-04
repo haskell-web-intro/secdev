@@ -1,0 +1,105 @@
+/**
+ * Tim's theme for reveal.js.
+ *
+ * Copyright (C) 2013 Timothy Braje
+ */
+
+
+// Default mixins and settings -----------------
+@import "../template/mixins";
+@import "../template/settings";
+// ---------------------------------------------
+
+
+// Include theme-specific fonts
+//@import url(http://fonts.googleapis.com/css?family=Unkempt:400,700|Droid+Sans+Mono|Annie+Use+Your+Telescope);
+@import url(http://fonts.googleapis.com/css?family=Unkempt:400,700|Droid+Sans+Mono);
+
+
+// Override theme settings (see ../template/settings.scss)
+$backgroundColor: #111;
+
+// Primary/body text
+$mainFont: 'Unkempt', cursive;
+$mainFontSize: 36px;
+$mainColor: #f8f8f2;
+
+// Headings
+$headingMargin: 0 0 20px 0;
+$headingFont: 'Unkempt', cursive;
+$headingColor: #ae81ff;
+$headingLineHeight: 0.9em;
+$headingLetterSpacing: 0.02em;
+$headingTextTransform: capitalize;
+$headingTextShadow: 0px 0px 6px rgba(0,0,0,0.2);
+$heading1TextShadow: $headingTextShadow;
+
+// Links and actions
+$linkColor: #13DAEC;
+$linkColorHover: lighten( $linkColor, 20% );
+
+// Text selection
+$selectionBackgroundColor: #FF5E99;
+$selectionColor: #fff;
+
+// Generates the presentation background, can be overridden
+// to return a background image or gradient
+@mixin bodyBackground() {
+	background: $backgroundColor;
+}
+
+// Theme template ------------------------------
+@import "../template/theme";
+// ---------------------------------------------
+
+/*********************************************
+ * LISTS
+ *********************************************/
+.reveal li {
+	font-size: 110%;
+	list-style-type: none;
+	line-height: 1.4em;
+	/*border: 5px solid #ae81ff;*/
+	text-align: center;
+	margin-bottom: 10px;
+	padding: 8px 10px 0 10px
+}
+
+/*********************************************
+ * CODE
+ *********************************************/
+.reveal pre {
+	display: inline-block;
+	width: auto;
+	min-width: 55%;
+	position: relative;
+	margin: 15px auto;
+
+	font-family: 'Droid Sans Mono', monospace;
+	font-size: 0.6em;
+	line-height: 1.1em;
+
+	vertical-align: middle;
+	background: rgba(255,255,255,.05);
+}
+
+.reveal pre code {
+	max-height: 800px;
+        padding: 1em;
+}
+
+.reveal blockquote {
+	border: 0;
+	width: 80%; }
+
+	.reveal blockquote:before {
+		content: '\201C';
+color: #ae81ff;
+font-size: 150%;
+font-style: normal; }
+
+.reveal blockquote:after {
+	content: '\201D';
+color: #ae81ff;
+font-size: 150%;
+font-style: normal; }

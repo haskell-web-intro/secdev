@@ -1,0 +1,17 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+
+module Main where
+
+import Control.Concurrent
+import Reflex
+import Reflex.Dom
+
+import ReflexCommon
+
+$imports
+
+runInit :: [IO ()]
+$runinit
+
+main = sequence_ runInit

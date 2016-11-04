@@ -1,0 +1,59 @@
+/**
+ * Tim's theme for reveal.js.
+ *
+ * Copyright (C) 2013 Timothy Braje
+ */
+
+// Default mixins and settings -----------------
+@import "../template/mixins";
+@import "../template/settings";
+// ---------------------------------------------
+
+// Include theme-specific fonts
+//@import url(../../lib/font/source-sans-pro/source-sans-pro.css);
+
+
+// Include theme-specific fonts
+//@import url(https://fonts.googleapis.com/css?family=Unkempt:400,700|Droid+Sans+Mono);
+//@import url(https://fonts.googleapis.com/css?family=Montserrat:700);
+//@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700,400italic,700italic);
+//@import url(https://fonts.googleapis.com/css?family=PT+Sans:400,700|Droid+Sans+Mono);
+@import url(https://fonts.googleapis.com/css?family=Raleway:900|Merriweather:900|Droid+Sans+Mono);
+//@import url(https://fonts.googleapis.com/css?family=Oxygen:400,700|Droid+Sans+Mono);
+//@import url(https://fonts.googleapis.com/css?family=Vollkorn:400,700,400italic,700italic|Droid+Sans+Mono);
+
+// Override theme settings (see ../template/settings.scss)
+$backgroundColor: #fff;
+
+$mainColor: #222;
+$headingColor: #222;
+
+$mainFontSize: 18pt;
+$mainFont: 'Merriweather', sans-serif;//'Open Sans', sans-serif;
+$headingFont: 'Raleway', sans-serif;//'Montserrat', Impact, sans-serif;
+$headingFontWeight: 900;
+$headingTextShadow: none;
+$headingLetterSpacing: -0.03em;
+$headingTextTransform: none;
+$linkColor: #2a76dd;
+$linkColorHover: lighten( $linkColor, 15% );
+$selectionBackgroundColor: lighten( $linkColor, 25% );
+
+$heading1Size: 2.0em;
+$heading2Size: 1.6em;
+$heading3Size: 1.3em;
+$heading4Size: 1.0em;
+
+section.has-dark-background {
+        &, h1, h2, h3, h4, h5, h6 {
+                color: #fff;
+        }
+}
+
+body {
+  font-weight: 900;
+}
+
+// Theme template ------------------------------
+@import "../template/theme";
+// ---------------------------------------------

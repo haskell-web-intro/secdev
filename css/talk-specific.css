@@ -1,0 +1,175 @@
+.redc     { color: red;      }
+.bluec    { color: blue;     }
+.magentac { color: magenta;  }
+.orangec  { color: orange;   }
+.greenc   { color: green;    }
+
+.material-icons.magenta { color: magenta; }
+
+/*********************************************
+ * CODE
+ *********************************************/
+.reveal .slides section pre {
+  display: inline-block;
+  width: auto;
+  min-width: 60%;
+  position: relative;
+  margin: 15px auto;
+  font-family: monospace; //'Droid Sans Mono', monospace;
+  font-size: 0.65em;
+  font-family: bold;
+  line-height: 1.1em;
+  vertical-align: middle;
+  box-shadow: none;
+  /*background: rgba(255, 255, 255, 0.05); */}
+
+.reveal .slides section pre code {
+  max-height: 75%;
+  /*border-radius: 15px;*/
+  box-shadow: none;
+  /* padding: 25px 50px; */
+}
+
+body {
+  background-color: #f8f8f8;
+}
+
+.reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6, .reveal .slides section {
+  letter-spacing: 0.001em;
+}
+
+.reveal .slides section {
+    font-weight: bold;
+}
+
+.reveal .slides section > div,
+.reveal .slides section > p {
+  margin: 0 2em;
+}
+
+.reveal .slides section > ul,
+.reveal .slides section > ol {
+  margin: 0 3em;
+}
+
+/* Handles the 'title-only' slides */
+section.present > p:first-child {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.reveal blockquote {
+  display: inline-block;
+  background-color: rgb(210,220,242); //#825c26;
+  border-radius: 15px;
+/*  margin-top: 250px; */
+}
+
+.reveal section img {
+  border: none;
+  background: none;
+  box-shadow: none;
+  max-height: 550px;
+}
+
+.reveal .slide-number {
+  color: black;
+  font-weight: bold;
+  display: inline;
+  position: absolute;
+  right: 1em;
+  bottom: 1em;
+  font-size: 0.75em;
+  opacity: inherit;
+}
+
+.reveal .slides section div.runCode {
+    padding: 1em;
+}
+.reveal .slides section div.row {
+    text-align: left;
+    padding-left: 0.5em;
+}
+
+.reveal .slides section .runCode {
+    /* background: LemonChiffon; */
+    /* background: #d1d0ce; */
+    /* background: #d1b6ff; */
+    /* background: #e9cfec; */
+    /* background: #d2b9d3; */
+    /* background: #bdae9d; */
+    background: #D6BDA2;
+    padding: 1em;
+    border-radius: 15px;
+}
+
+div.runCode div.step {
+    text-align: right;
+}
+
+.reveal section blockquote {
+  /* background: #f9f9f9; */
+  background-color: #ccc;
+  text-align: left;
+  border-left: 10px solid #a9a9a9;
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+  quotes: "\201C""\201D""\2018""\2019";
+}
+
+.reveal section blockquote:before {
+  color: #a9a9a9;
+  content: open-quote;
+  font-size: 4em;
+  line-height: 0.1em;
+  margin-right: 0.25em;
+  vertical-align: -0.4em;
+}
+
+.reveal section blockquote p:first-child,
+.reveal section blockquote p:last-child,
+.reveal section blockquote p {
+  /* background-color: #f9f9f9; */
+  background-color: #ccc;
+  display: inline;
+}
+
+.reveal .footnote {
+    position: absolute;
+    font-size: medium;
+    right: 0px;
+    bottom: -2em;
+}
+
+.slides .mdl-textfield {
+    width: 90%;
+}
+
+#clunsf,
+#clsf {
+    margin-top: 0.5em;
+    padding: 0.25em;
+    min-height: 0;
+}
+
+.slides div.mdl-card h2,
+.slides div.mdl-card span {
+    margin-right: 8px;
+    font-size: 16px;
+    font-weight: normal;
+    line-height: 32px;
+    vertical-align: middle;
+}
+
+#topdown,
+#threed {
+    min-height: 400px;
+}
+
+#rr {
+    margin: 0 25em;
+    text-align: left;
+    font-size: xx-small;
+    position: absolute;
+    bottom: -25em;
+}

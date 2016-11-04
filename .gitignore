@@ -1,0 +1,36 @@
+dist
+*.DS_Store
+cabal-dev
+*.o
+*.hi
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+.virtualenv
+.hpc
+.hsenv
+.cabal-sandbox/
+cabal.sandbox.config
+*.prof
+*.aux
+*.hp
+.liquid/
+
+# Presentation outputs
+index.html
+filter-pandoc
+
+# Emacs junk
+*~
+
+# Stack Setup artifacts
+reflex
+reflex-dom
+.stack-work
+*/slides-src/main.*
+*/slides-src/M*
+js/all.js
+
+# Reveal artifacts
+reveal.js/node_modules
