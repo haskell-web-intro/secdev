@@ -98,7 +98,8 @@ section.present > p:first-child {
     /* background: #e9cfec; */
     /* background: #d2b9d3; */
     /* background: #bdae9d; */
-    background: #D6BDA2;
+    /* background: #D6BDA2; */
+    background: #dbc2ff;
     padding: 1em;
     border-radius: 15px;
 }
