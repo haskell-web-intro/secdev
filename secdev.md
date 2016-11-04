@@ -33,6 +33,12 @@ writing Haskell for a year and a half  at MIT Lincoln Laboratory
 
 * Functional Reactive Programming for the GUI
 
+# The Takeaway: Type Driven Programming
+
+> Make insecure code inexpressible
+
+(inspired by Yaron Minsky's "Make illegal states unrepresentable")
+
 # Motivation
 
 * Types are the lightest-weight verification tool
@@ -59,6 +65,8 @@ writing Haskell for a year and a half  at MIT Lincoln Laboratory
 # A Brief Tour of the Haskell Ecosystem
 * Types as a specification: precise properties
     * Correctness ~ Security
+* `GHC`: the Haskell compiler
+* `GHCJS`: the Haskell-to-JavaScript compiler
 * `LiquidHaskell`{.magentac}: provable properties
 * `Phantom Types`{.bluec}: lightweight enforcement against SQLi, XSS
 * `Functional Reactive Programming`{.greenc}: callback-free user interfaces
@@ -80,6 +88,12 @@ writing Haskell for a year and a half  at MIT Lincoln Laboratory
 * Docker?
 * GHCJS/Reflex/Servant?
 
+<br/>
+
+* Has everyone run either
+    * `docker pull mmaz/secdev`
+    * `docker pull mmaz/server-secdev`
+
 # Docker Basics
 
 <div class="mdl-grid"><div class="mdl-cell mdl-cell--6-col">
@@ -87,6 +101,7 @@ Right now, update:
 ```bash
 $ docker pull mmaz/secdev
 ```
+
 </div><div class="mdl-cell mdl-cell--6-col">
 Test it out:
 ```bash
@@ -107,6 +122,8 @@ $ docker run \
   -e "http_proxy=..." -e "https_proxy=..." -e "HTTP_PROXY=..." -e "HTTPS_PROXY=..."  \
   --rm -it mmaz/secdev /bin/intro
 ```
+
+Docker stops working? In a new terminal window: `docker stop $(docker ps -a -q)`
 
 # Docker Run
 
@@ -325,7 +342,7 @@ andfive x = x <> "andfive" --concatenates strings
 * a pure function like this can't perform IO
 
 ```haskell
-addTwoNumbers :: Int -> Int -> Int
+plus :: Int -> Int -> Int
 ```
 
 * Wrap pure computations inside an `IO`{.redc} action context
@@ -333,10 +350,6 @@ addTwoNumbers :: Int -> Int -> Int
 ```haskell
 plusAndPrint :: Int -> Int -> IO Int
 ```
-
-<div class="mdl-grid">
-<div class="mdl-cell mdl-cell--1-col"></div>
-<div class="mdl-cell mdl-cell--6-col">
 
 ```{.haskell .numberLines}
 plus :: Int -> Int -> Int
@@ -348,15 +361,6 @@ plusAndPrint x y = do
   print result
   return result
 ```
-</div>
-<div class="mdl-cell mdl-cell--3-col">
-```haskell
-$ cd examples/addtwonumbers
-$ stack addTwoNumbers.hs
-plusAndPrint 3 5
-8
-```
-</div>
 
 # Calling Functions in Haskell
 
@@ -490,6 +494,18 @@ $ secdev> exit #or Ctrl-D
 ```
 
 (continuous typechecking: `stack build --file-watch --fast`)
+
+# Exercise 1: The Takeaway
+
+Your (deeply nested) data model grows as you refactor
+
+<br/>
+
+You add more cases, you remove old cases
+
+<br/>
+
+GHC checks exhaustiveness at all use-sites
 
 Ex 2: `LiquidHaskell`
 ========================
@@ -813,6 +829,11 @@ $ secdev> stack runghc PhantomTypes.hs
 * Play with the unsafe version, making edits
 * Uncomment `main2`, import safe module, update `main`, and discover that you can no longer inject
 
+# Exercise 3 -- The Takeaway
+
+* GHC won't compile unsanitized user input
+    * Insecure code is unrepresentable
+
 <!--
   --
   --
@@ -972,7 +993,7 @@ The API type specifies the http method, argument types, and return types
 
 ```{.haskell .numberLines}
 server :: Server LogApi
-server = undefined :<|> undefined :<|> undefined
+server = undefined :<|> undefined :<|> undefined -- line 68
 
 foo :: Log -> Handler Status
 foo _ = return OK
@@ -990,6 +1011,12 @@ baz n = return Log {ident = n, timestamp = 102, message = "message"}
 * Compiler checked server implementation
 * Server is combination of handlers
 * Task: fill in server implementation
+
+```
+$ docker run -p 8080:8080 --rm -it mmaz/secdev /bin/bash
+$ secdev> emacs LogApi.hs #edit line 68
+$ secdev> stack runghc LogApi.hs
+```
 
 # Leveraging the Specification
 
@@ -1070,7 +1097,7 @@ of executing that code in the DOM.
 ```
 
 <div class="runCode" style="margin-top: 2em;">
-  divs like this are results of executing code snippet
+  divs like this are results of executing code snippets
 </div>
 
 Reflex Example (1)
@@ -1174,10 +1201,11 @@ start = grid $ do
 # XSS -- Wrapping a Library for Safety
 
 ```{.haskell .numberLines}
+-- unsafe function which is hidden from library users
 elDynHtmlUnsafe :: MonadWidget t m => Text -> Dynamic t Text -> m (El t)
 elDynHtmlUnsafe e = ...
 
--- safe version of elDynHtml'
+-- safe version of elDynHtmlUnsafe (only this function is exposed to users)
 elDynHtml :: MonadWidget t m => Text -> Dynamic t (UserInput Clean) -> m (El t)
 elDynHtml e = elDynHtmlUnsafe e . fmap getInput
 ```
@@ -1223,6 +1251,10 @@ makeReq inp =
 Upon every key press, we send the input back to the server to sanitize it.
 
 # Complete XSS Example -- Demo
+
+```bash
+docker run -p 8080:8080 --rm -it mmaz/secdev /bin/bash -c "cd /root/examples/reflex-ghcjs-server; stack exec server"
+```
 
 Ex 5: Type-Level Functions
 =============================
