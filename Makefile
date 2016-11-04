@@ -27,7 +27,7 @@ publish: index.html
 	git branch -D gh-pages || true
 	git push origin :gh-pages || true
 	git checkout --orphan gh-pages
-	git rm -rf *.md *.txt ghcjs-docker examples bundle servant-docker slide-build .gitignore
+	git rm -rf *.md examples slide-build .gitignore
 	git add index.html js
 	git commit -am"Publish new site version"
 	git push -u origin gh-pages
