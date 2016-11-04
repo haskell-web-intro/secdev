@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.indigo-pink.min.css">
+    <link rel="stylesheet" href="css/monokai.css">
+    <link rel="stylesheet" href="css/code.css">
+    <script src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+    <script src="js/highlight.pack.js"></script>
+  </head>
+  <body>
+    <div><div id="xss-code"></div></div>
+
+    <div class="mdl-grid">
+      <div class="mdl-cell mdl-cell--6-col">
+        <pre><code class="haskell">
+{-# LANGUAGE TypeOperators, DataKinds #-}
+module Main where
+
+import Data.Text (Text)
+
+import Network.Wai.Handler.Warp
+import Servant
+import Text.HTML.SanitizeXSS (sanitize)
+
+
+type SanitizeApi =
+       "sanitize" :> ReqBody '[PlainText] Text :> Post '[PlainText] Text
+  :<|> Raw
+
+sanitizer :: Text -> Handler Text
+sanitizer = return . sanitize
+
+endpoints :: Server SanitizeApi
+endpoints = sanitizer :<|> serveDirectory "static"
+
+main :: IO ()
+main = run 8080 $ serve (Proxy :: Proxy SanitizeApi) endpoints
+        </code></pre>
+        <pre><code class="haskell">
+{-# LANGUAGE OverloadedStrings #-}
+import Reflex
+
+import MdlWidgets
+import ServerSafeDom
+
+main :: IO ()
+main = mainWidget $ grid $ do
+  cell2 blank
+  cell8 $ do
+
+    inp <- mdlInput (getInput defaultInput)
+
+    let inpEv   = _textInput_input inp
+    sanitizedEv <- sanitize inpEv
+
+    safeDyn <- foldDyn const defaultInput sanitizedEv
+
+    grid $ do
+      cell3 blank
+      cell6 $ mdlTitleCard "Sanitized" "sani" $ elDynHtml "span" safeDyn
+      cell3 blank
+  cell2 blank
+        </code></pre>
+      </div>
+      <div class="mdl-cell mdl-cell--6-col">
+        <pre><code class="haskell">
+{-# LANGUAGE OverloadedStrings #-}
+
+module ServerSafeDom
+  ( UserInput
+  , Clean
+  , Dirty
+  , sanitize
+  , readInput
+  , getInput
+
+  -- Functions re-exported from Reflex.Dom
+  , module RDExport
+
+  -- Safe reimplementation of functions from ReflexDom
+  , elDynHtml
+  , _textInput_value
+  , _textInput_input
+
+  -- Static strings we know are good
+  , defaultInput
+
+  ) where
+
+import Reflex.Dom as RDExport hiding (elDynHtml', _textInput_value, _textInput_input)
+import qualified Reflex.Dom as RD
+
+import Data.Text (Text)
+
+
+-- Wrapped Dom elements
+elDynHtml :: MonadWidget t m => Text -> Dynamic t (UserInput Clean) -> m (El t)
+elDynHtml e = RD.elDynHtml' e . fmap getInput
+
+_textInput_value :: Reflex t => TextInput t -> Dynamic t (UserInput Dirty)
+_textInput_value = fmap UserInput . RD._textInput_value
+
+_textInput_input :: Reflex t => TextInput t -> Event t (UserInput Dirty)
+_textInput_input = fmap UserInput . RD._textInput_input
+
+data Clean
+data Dirty
+
+newtype UserInput a = UserInput {
+  getInput :: Text
+}
+
+readInput :: Text -> UserInput Dirty
+readInput = UserInput
+
+sanitize :: MonadWidget t m => Event t (UserInput Dirty) -> m (Event t (UserInput Clean))
+sanitize inp = do
+  evResp <- performRequestAsync $ fmap makeReq inp
+  let evInp = _xhrResponse_responseText <$> evResp
+  return $ fmap (maybe (UserInput "") UserInput) evInp
+
+makeReq :: UserInput Dirty -> XhrRequest Text
+makeReq inp =
+  xhrRequest
+    "POST" "/sanitize"
+    (def {_xhrRequestConfig_sendData = getInput inp} )
+
+defaultInput :: UserInput Clean
+defaultInput = UserInput "<span>spooky user input</span>"
+        </code></pre>
+      </div>
+    </div>
+
+  </body>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <script language="javascript" src="js/all-serverside-xss-safe.js"></script>
+</html>

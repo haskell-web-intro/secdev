@@ -1,0 +1,20 @@
+name:                xss-server
+version:             0.1.0.0
+synopsis:            servant example
+description:         servant example
+build-type:          Simple
+cabal-version:       >=1.18
+
+executable server
+  default-language:    Haskell2010
+  hs-source-dirs:      src/
+  main-is:             Main.hs
+  ghc-options:         -Wall -O2 -j +RTS -A128m -n2m -RTS -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , either
+                     , servant
+                     , servant-server
+                     , text
+                     , wai
+                     , warp
+                     , xss-sanitize

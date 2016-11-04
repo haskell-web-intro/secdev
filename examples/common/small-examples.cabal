@@ -1,0 +1,109 @@
+name:                small-examples
+version:             0.1.0.0
+synopsis:            intro
+description:         intro
+build-type:          Simple
+cabal-version:       >=1.18
+
+library
+  default-language:    Haskell2010
+  hs-source-dirs:      src/
+  exposed-modules:     Datatypes
+                     , MyStore
+                     , MySafeStore
+  ghc-options:         -Wall -O2 -j +RTS -A128m -n2m -RTS
+  build-depends:       base
+                     , aeson
+                     , containers
+                     , direct-sqlite
+                     , monad-control
+                     , mtl
+                     , text
+
+executable add-two-numbers
+  default-language:    Haskell2010
+  hs-source-dirs:      app/
+  main-is:             AddTwoNumbers.hs
+  ghc-options:         -Wall -O2 -main-is AddTwoNumbers -j +RTS -A128m -n2m -RTS
+  build-depends:       base
+
+executable intro
+  default-language:    Haskell2010
+  hs-source-dirs:      app/
+  main-is:             Intro.hs
+  ghc-options:         -Wall -O2 -main-is Intro -j +RTS -A128m -n2m -RTS
+  build-depends:       base
+
+executable phantom
+  default-language:    Haskell2010
+  hs-source-dirs:      app/
+  main-is:             PhantomTypes.hs
+  ghc-options:         -Wall -O2 -main-is PhantomTypes -j +RTS -A128m -n2m -RTS
+  build-depends:       base
+                     , small-examples
+                     , text
+
+executable families
+  default-language:    Haskell2010
+  hs-source-dirs:      app/
+  main-is:             TypeFamilies.hs
+  ghc-options:         -Wall -O2 -main-is TypeFamilies -j +RTS -A128m -n2m -RTS
+  build-depends:       base
+
+executable hello-servant
+  default-language:    Haskell2010
+  hs-source-dirs:      app/
+  main-is:             CarServer.hs
+  ghc-options:         -Wall -O2 -main-is CarServer -j +RTS -A128m -n2m -RTS -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , small-examples
+                     , aeson
+                     , servant
+                     , servant-server
+                     , text
+                     , transformers
+                     , wai
+                     , warp
+
+executable log-api
+  default-language:    Haskell2010
+  hs-source-dirs:      app
+  main-is:             LogApi.hs
+  ghc-options:         -Wall -O2 -main-is LogApi -j +RTS -A128m -n2m -RTS -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , aeson
+                     , bytestring
+                     , either
+                     , mtl
+                     , servant
+                     , servant-client
+                     , servant-server
+                     , servant-swagger
+                     , swagger2
+                     , text
+                     , transformers
+                     , wai
+                     , wai-extra
+                     , warp
+
+executable savedstate
+  default-language:    Haskell2010
+  hs-source-dirs:      app/
+  main-is:             SavedState.hs
+  ghc-options:         -Wall -O2 -main-is SavedState -j +RTS -A128m -n2m -RTS -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , either
+                     , text
+                     , lens
+                     , mtl
+                     , transformers
+                     , vector
+                     , mmorph
+                     , aeson
+                     , bytestring
+                     , containers
+                     , stm
+                     , servant
+                     , servant-server
+                     , wai
+                     , warp

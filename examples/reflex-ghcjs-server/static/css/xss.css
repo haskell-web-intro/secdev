@@ -1,0 +1,22 @@
+span {
+    margin: 1em;
+}
+
+input {
+    min-width: 100%;
+}
+
+.box {
+    border: 1px solid green;
+}
+
+.whole-block {
+    display: block;
+    width: 100%;
+}
+
+.label {
+    min-width: 10em;
+    text-align: right;
+    display: inline-block;
+}
