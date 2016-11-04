@@ -1,0 +1,1917 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Safe Client/Server Web Development with Haskell</title>
+
+    <meta name="description" content="Describe Me">
+    <meta name="author" content="Timothy Braje">
+
+    <link rel="stylesheet" href="reveal.js/css/reveal.min.css">
+    <!--<link rel="stylesheet" href="reveal.js/css/theme/beige.css" id="theme">-->
+    <link rel="stylesheet" href="reveal.js/css/theme/braje-white.css" id="theme">
+
+    <!-- <link rel="stylesheet" href="reveal.js/css/print/pdf.css"> -->
+      <link type="text/css" rel="stylesheet" href="css/material.min.css"/>
+    
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <!--<link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.indigo-pink.min.css">-->
+    <link type="text/css" rel="stylesheet" href="css/hk-espresso.css"/>
+    <!--<link type="text/css" rel="stylesheet" href="css/hk-tango.css"/>-->
+    
+    <!-- style theme overrides -->
+    <link rel="stylesheet" href="css/talk-specific.css">
+  </head>
+<body>
+
+  <div class="reveal">
+    <div class="slides">
+      <section class="slide title">
+        <header class="title">
+          <h2>Safe Client/Server Web Development with Haskell</h2>
+          <h3></h3>
+          <h5>Mark Mazumder &amp; Timothy Braje</h5>
+        </header>
+        <img src="img/ll-logo-black.png" width="25%"></img>
+        <footer class="title">
+          <h6>4 November 2016</h6>
+          <div id="rr">
+            <p>DISTRIBUTION STATEMENT A. Approved for public release; distribution is unlimited.
+
+            <p>This material is based upon work supported under Air Force Contract No. FA8721-05-C-0002 and/or FA8702-15-D-0001. Any opinions, findings, conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the U.S. Air Force.
+
+            <p>© 2016 Massachusetts Institute of Technology.
+
+            <p>Delivered to the U.S. Government with Unlimited Rights, as defined in DFARS Part 252.227-7013 or 7014 (Feb 2014).  Notwithstanding any copyright notice, U.S. Government rights in this work are defined by DFARS 252.227-7013 or DFARS 252.227-7014 as detailed above. Use of this work other than as specifically authorized by the U.S. Government may violate any copyrights that exist in this work.
+          </div>
+        </footer>
+      </section>
+<section id="about-us" class="slide level1">
+<h1>About us</h1>
+<p>writing Haskell for a year and a half at MIT Lincoln Laboratory</p>
+<p><code>mazumder@ll.mit.edu</code></p>
+<p><code>tbraje@ll.mit.edu</code></p>
+</section>
+<section id="outline" class="slide level1">
+<h1>Outline</h1>
+<ul>
+<li><p>Haskell Crash Course</p></li>
+<li><p>Phantom Types for Enforced Sanitization</p></li>
+<li><p>Servant – A Web API as a Type</p></li>
+<li><p>Functional Reactive Programming for the GUI</p></li>
+</ul>
+</section>
+<section id="the-takeaway-type-driven-programming" class="slide level1">
+<h1>The Takeaway: Type Driven Programming</h1>
+<blockquote>
+<p>Make insecure code inexpressible</p>
+</blockquote>
+<p>(inspired by Yaron Minsky’s “Make illegal states unrepresentable”)</p>
+</section>
+<section id="motivation" class="slide level1">
+<h1>Motivation</h1>
+<ul>
+<li>Types are the lightest-weight verification tool</li>
+<li>Automates reasoning about your code</li>
+<li>Security and correctness are tied</li>
+</ul>
+<p><br/></p>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<ul>
+<li>Security - properties of your code <i class="material-icons magenta">arrow_forward</i></li>
+<li>Tests - imprecise specifications <i class="material-icons magenta">arrow_forward</i></li>
+<li>Types - precise specifications <i class="material-icons magenta">arrow_forward</i></li>
+<li>Difficult: code review verification <i class="material-icons magenta">arrow_forward</i></li>
+</ul>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<ul>
+<li>Add security properties to types</li>
+<li>Tests exercise finite inputs</li>
+<li>Forced to adhere to a contract</li>
+<li>Easy: compiler verification</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="a-brief-tour-of-the-haskell-ecosystem" class="slide level1">
+<h1>A Brief Tour of the Haskell Ecosystem</h1>
+<ul>
+<li>Types as a specification: precise properties
+<ul>
+<li>Correctness ~ Security</li>
+</ul></li>
+<li><code>GHC</code>: the Haskell compiler</li>
+<li><code>GHCJS</code>: the Haskell-to-JavaScript compiler</li>
+<li><code class="magentac">LiquidHaskell</code>: provable properties</li>
+<li><code class="bluec">Phantom Types</code>: lightweight enforcement against SQLi, XSS</li>
+<li><code class="greenc">Functional Reactive Programming</code>: callback-free user interfaces</li>
+<li><code class="orangec">TypeFamilies</code>: type-level programming</li>
+<li><code class="redc">Software Transactional Memory</code>: easy concurrency (no locks)</li>
+</ul>
+<!--
+  --
+  --
+  -- Haskell Introduction
+  --
+  --
+  -->
+</section>
+<section id="questions-for-pairing-up" class="slide level1">
+<h1>Questions for pairing up</h1>
+<ul>
+<li>Haskell experience?</li>
+<li>Vim or Emacs?</li>
+<li>Docker?</li>
+<li>GHCJS/Reflex/Servant?</li>
+</ul>
+<p><br/></p>
+<ul>
+<li>Has everyone run either
+<ul>
+<li><code>docker pull mmaz/secdev</code></li>
+<li><code>docker pull mmaz/server-secdev</code></li>
+</ul></li>
+</ul>
+</section>
+<section id="docker-basics" class="slide level1">
+<h1>Docker Basics</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<p>Right now, update:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> pull mmaz/secdev</code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<p>Test it out:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run --rm -it mmaz/secdev /bin/intro</code></pre></div>
+<pre><code>[0,1,2,3,4,5]
+...</code></pre>
+</div>
+</div>
+<p><br/></p>
+<p>Behind a proxy?</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run \
+  -e <span class="st">&quot;http_proxy=...&quot;</span> -e <span class="st">&quot;https_proxy=...&quot;</span> -e <span class="st">&quot;HTTP_PROXY=...&quot;</span> -e <span class="st">&quot;HTTPS_PROXY=...&quot;</span>  \
+  --rm -it mmaz/secdev /bin/intro</code></pre></div>
+<p>Docker stops working? In a new terminal window: <code>docker stop $(docker ps -a -q)</code></p>
+</section>
+<section id="docker-run" class="slide level1">
+<h1>Docker Run</h1>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run -p 8080:8080 --rm -it mmaz/secdev /bin/bash
+$ <span class="kw">secdev&gt;</span> exit <span class="co"># or Ctrl-d</span></code></pre></div>
+<ul>
+<li><code class="redc">-e</code> environment variable <code>&quot;foo=bar&quot;</code></li>
+<li><code class="redc">-p</code> port mapping</li>
+<li><code class="redc">--rm</code> stateless (don’t persist changes)</li>
+<li><code class="redc">-i</code> interactive (don’t background)</li>
+<li><code class="redc">-t</code> tag name (<code>mmaz/secdev</code>)</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run -p 8080:8080 --rm -it mmaz/secdev /bin/ghci
+<span class="kw">GHCi</span>, version 8.0.1
+<span class="kw">Prelude&gt;</span> 3 + 4
+<span class="kw">7</span>
+<span class="kw">Prelude&gt;</span> :quit -- or Ctrl-D</code></pre></div>
+</section>
+<section id="spacemacs-emacs-vim" class="slide level1">
+<h1>Spacemacs: Emacs + Vim</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run --rm -it mmaz/secdev /bin/bash
+$ <span class="kw">secdev&gt;</span> emacs AddTwoNumbers.hs
+<span class="co"># Alternatively</span>
+<span class="co">#         vim  AddTwoNumbers.hs</span>
+<span class="co">#         nano AddTwoNumbers.hs</span>
+$ <span class="kw">secdev&gt;</span> exit <span class="co">#or Ctrl-d</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<ul>
+<li>Default: Vim-Mode</li>
+<li>Quit <code>:q Enter</code> (or <code>Esc :q Enter</code>)</li>
+<li>Switch to emacs-mode: <code>SPC t E e</code></li>
+<li>Exit from emacs-mode: <code>Ctrl-x Ctrl-c</code></li>
+<li>Exit from nano: <code>Ctrl-x</code></li>
+</ul>
+</div>
+</div>
+</section>
+<section id="haskell-crash-course" class="slide level1">
+<h1>Haskell Crash Course</h1>
+<figure>
+<img src="img/haskell.png" />
+</figure>
+<div class="footnote">
+<p><a href="https://xkcd.com/1312/">Source: XKCD</a></p>
+</div>
+</section>
+<section id="intro-to-haskell" class="slide level1">
+<h1>Intro to Haskell</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--1-col">
+
+</div>
+<div class="mdl-cell mdl-cell--2-col">
+<p>Haskell:</p>
+<p><code class="sourceCode haskell"><span class="ot">x ::</span> <span class="dt">A</span></code></p>
+<p><code class="sourceCode haskell">x <span class="fu">=</span> y</code></p>
+<p><code class="sourceCode haskell"><span class="dt">A</span> <span class="ot">-&gt;</span> <span class="dt">B</span></code></p>
+</div>
+<div class="mdl-cell mdl-cell--3-col">
+<p>Meaning:</p>
+<p><code class="redc">x</code> has type <code class="sourceCode haskell"><span class="dt">A</span></code></p>
+<p><code class="redc">x</code> defined to be <code class="greenc">y</code></p>
+<p>function from <code class="sourceCode haskell"><span class="dt">A</span></code> to <code class="sourceCode haskell"><span class="dt">B</span></code></p>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">theNumberFive ::</span> <span class="dt">Int</span>   <span class="co">-- type declaration</span>
+theNumberFive <span class="fu">=</span> <span class="dv">5</span>      <span class="co">-- definition</span>
+
+show<span class="ot"> ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">String</span>  <span class="co">-- function type</span>
+
+<span class="fu">$</span> stack ghci           <span class="co">-- interactive repl</span>
+<span class="fu">&gt;&gt;&gt;</span> theNumberFive
+<span class="dv">5</span><span class="ot"> ::</span> <span class="dt">Int</span>
+<span class="fu">&gt;&gt;&gt;</span> show theNumberFive
+<span class="st">&quot;5&quot;</span><span class="ot"> ::</span> <span class="dt">String</span></code></pre></div>
+</div>
+</div>
+<p><code class="sourceCode haskell"><span class="co">--double dash for code comments</span></code></p>
+<p>String literals like <code class="sourceCode haskell"><span class="st">&quot;5&quot;</span></code> are doublequoted</p>
+</section>
+<section id="intro-to-haskell-1" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>Let’s convert this C function to Haskell</p>
+<figure>
+<img src="img/haskell101/01.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-2" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>don’t need a type signature: still valid Haskell</p>
+<figure>
+<img src="img/haskell101/02.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-3" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>the function name</p>
+<figure>
+<img src="img/haskell101/03.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-4" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>a return value C is a definition in Haskell</p>
+<figure>
+<img src="img/haskell101/04.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-5" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>how do we read a type signature?</p>
+<figure>
+<img src="img/haskell101/05.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-6" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>still have the function name (like a header file in C)</p>
+<figure>
+<img src="img/haskell101/06.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-7" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>this is the <code class="greenc">type</code> of the <code class="greenc">argument</code> to <code class="orangec">plusfive</code></p>
+<figure>
+<img src="img/haskell101/07.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-8" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>Types read left-to-right. <code class="greenc">argument</code> type to (“<code class="sourceCode haskell"><span class="ot">-&gt;</span></code>”) <code class="redc">return</code> type</p>
+<figure>
+<img src="img/haskell101/08.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-9" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>name the argument value “<code class="magentac">x</code>” in the lexical scope</p>
+<figure>
+<img src="img/haskell101/09.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-10" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>use “<code class="magentac">x</code>” in the function definition</p>
+<figure>
+<img src="img/haskell101/10.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-11" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>all together: the <code class="greenc">input type</code><code>,</code> the <code class="redc">output type</code><code>,</code> and the <code class="magentac">name-binding</code></p>
+<figure>
+<img src="img/haskell101/11.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-12" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>what about multiple arguments?</p>
+<figure>
+<img src="img/haskell101/12.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-13" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>the <code class="redc">return type</code> is still rightmost in Haskell</p>
+<figure>
+<img src="img/haskell101/13.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-14" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>here is the type of the <code class="greenc">first argument</code></p>
+<figure>
+<img src="img/haskell101/14.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-15" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>here is the type of the <code class="greenc">second argument</code></p>
+<figure>
+<img src="img/haskell101/15.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-16" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>so <code class="orangec">plus</code> takes two <code class="greenc">int</code>s and returns an <code class="greenc">int</code></p>
+<figure>
+<img src="img/haskell101/16.png" />
+</figure>
+</section>
+<section id="intro-to-haskell-17" class="slide level1">
+<h1>Intro to Haskell</h1>
+<p>spaces separate <code class="magentac">name bindings</code> instead of commas</p>
+<figure>
+<img src="img/haskell101/17.png" />
+</figure>
+</section>
+<section id="type-errors" class="slide level1">
+<h1>Type Errors</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--4-col">
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">plusfive ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+plusfive x <span class="fu">=</span> x <span class="fu">+</span> <span class="dv">5</span>
+
+<span class="fu">&gt;&gt;&gt;</span> plusfive <span class="dv">4</span>
+<span class="dv">9</span>
+
+<span class="fu">&gt;&gt;&gt;</span> plusfive <span class="fl">4.0</span>
+ error<span class="fu">:</span> <span class="st">&quot;not an Int&quot;</span></code></pre></td></tr></table></div>
+</div>
+<div class="mdl-cell mdl-cell--7-col">
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">andfive ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+andfive x <span class="fu">=</span> x <span class="fu">&lt;&gt;</span> <span class="st">&quot;andfive&quot;</span> <span class="co">--concatenates strings</span>
+
+<span class="fu">&gt;&gt;&gt;</span> andfive <span class="st">&quot;4&quot;</span>           <span class="co">-- strings are doublequoted</span>
+<span class="st">&quot;4andfive&quot;</span>
+
+<span class="fu">&gt;&gt;&gt;</span> andfive <span class="dv">4</span>             <span class="co">-- inferred type</span>
+ error<span class="fu">:</span> <span class="st">&quot;not a String&quot;</span>
+
+<span class="fu">&gt;&gt;&gt;</span> andfive (<span class="dv">4</span><span class="ot"> ::</span> <span class="dt">Int</span>)    <span class="co">-- explicit type annotation</span>
+ error<span class="fu">:</span> <span class="st">&quot;not a String&quot;</span>
+
+<span class="fu">&gt;&gt;&gt;</span> andfive (<span class="dv">4</span><span class="ot"> ::</span> <span class="dt">String</span>) <span class="co">-- no casting allowed</span>
+ error<span class="fu">:</span> <span class="st">&quot;No instance for (Num String)</span>
+<span class="st">         arising from the literal 4&quot;</span></code></pre></td></tr></table></div>
+</div>
+</div>
+</section>
+<section id="networks-databases-stdout" class="slide level1">
+<h1>Networks, Databases, Stdout</h1>
+<ul>
+<li>a pure function like this can’t perform IO</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">plus ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span></code></pre></div>
+<ul>
+<li>Wrap pure computations inside an <code class="redc">IO</code> action context</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">plusAndPrint ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span></code></pre></div>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">plus ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+plus x y <span class="fu">=</span> x <span class="fu">+</span> y
+
+<span class="ot">plusAndPrint ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> <span class="dt">Int</span>
+plusAndPrint x y <span class="fu">=</span> <span class="kw">do</span>
+  <span class="kw">let</span> result <span class="fu">=</span> plus x y
+  print result
+  return result</code></pre></td></tr></table></div>
+</section>
+<section id="calling-functions-in-haskell" class="slide level1">
+<h1>Calling Functions in Haskell</h1>
+<p>Filtering a list</p>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">removeBigNumbers ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+removeBigNumbers x <span class="fu">=</span> x <span class="fu">&lt;</span> <span class="dv">6</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;&gt;&gt;</span> filter removeBigNumbers [<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">8</span>,<span class="dv">9</span>,<span class="dv">10</span>]
+[<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>]</code></pre></div>
+</div>
+</div>
+<div class="fragment">
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">staticTypes ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+staticTypes lang
+  <span class="fu">|</span> lang <span class="fu">==</span> <span class="st">&quot;javascript&quot;</span> <span class="fu">=</span> <span class="dt">False</span>
+  <span class="fu">|</span> lang <span class="fu">==</span> <span class="st">&quot;ruby&quot;</span>       <span class="fu">=</span> <span class="dt">False</span>
+  <span class="fu">|</span> lang <span class="fu">==</span> <span class="st">&quot;haskell&quot;</span>    <span class="fu">=</span> <span class="dt">True</span>
+  <span class="fu">|</span> lang <span class="fu">==</span> <span class="st">&quot;scala&quot;</span>      <span class="fu">=</span> <span class="dt">True</span>
+  <span class="fu">|</span> otherwise            <span class="fu">=</span> <span class="dt">True</span> <span class="co">--oops</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;&gt;&gt;</span> filter staticTypes [<span class="st">&quot;javascript&quot;</span>, <span class="st">&quot;python&quot;</span>, <span class="st">&quot;haskell&quot;</span>]
+[<span class="st">&quot;python&quot;</span>,<span class="st">&quot;haskell&quot;</span>]
+  <span class="fu">^</span> oops</code></pre></div>
+</div>
+</div>
+<p>Program against types instead of strings</p>
+</div>
+</section>
+<section id="exercise-1-haskell-101" class="slide level1">
+<h1>Exercise 1 – Haskell 101</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- an enum</span>
+<span class="kw">data</span> <span class="dt">Languages</span> <span class="fu">=</span> <span class="dt">JavaScript</span>
+               <span class="fu">|</span> <span class="dt">Ruby</span>
+               <span class="fu">|</span> <span class="dt">Haskell</span>
+               <span class="fu">|</span> <span class="dt">Scala</span>
+               <span class="fu">|</span> <span class="dt">Python</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">betterStaticTypes ::</span> <span class="dt">Languages</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+betterStaticTypes lang <span class="fu">=</span> <span class="kw">case</span> lang <span class="kw">of</span>
+  <span class="dt">JavaScript</span>  <span class="ot">-&gt;</span> <span class="dt">False</span>
+  <span class="dt">Ruby</span>        <span class="ot">-&gt;</span> <span class="dt">False</span>
+  <span class="dt">Haskell</span>     <span class="ot">-&gt;</span> <span class="dt">True</span>
+  <span class="dt">Scala</span>       <span class="ot">-&gt;</span> <span class="dt">True</span>
+  <span class="dt">Python</span>      <span class="ot">-&gt;</span> <span class="dt">False</span></code></pre></div>
+</div>
+</div>
+<div class="fragment">
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<p>If you forget a case:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">  <span class="fu">...</span>
+  <span class="dt">Scala</span>       <span class="ot">-&gt;</span> <span class="dt">True</span>
+  <span class="co">--Python      -&gt; False</span></code></pre></div>
+<pre><code>warning: [-Wincomplete-patterns]
+    Pattern match(es) are non-exhaustive
+    In a case alternative: Patterns not matched: Python</code></pre>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<p>If you mix strings in:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;&gt;&gt;</span> filter betterStaticTypes [<span class="dt">Haskell</span>, <span class="dt">Python</span>]
+[<span class="dt">Haskell</span>]
+<span class="fu">&gt;&gt;&gt;</span> filter betterStaticTypes [<span class="dt">Haskell</span>, <span class="st">&quot;bash&quot;</span>]</code></pre></div>
+<pre><code>Couldn&#39;t match expected type ‘Languages’
+                  with actual type ‘String’
+    &gt; In the expression: &quot;bash&quot;
+    &gt; In the second argument of ‘filter’,
+      namely ‘[Haskell, &quot;bash&quot;]’</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="exercise-1---try-it-out" class="slide level1">
+<h1>Exercise 1 - Try it out</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Languages</span> <span class="fu">=</span> <span class="dt">JavaScript</span> <span class="fu">|</span> <span class="dt">Haskell</span> <span class="fu">|</span> <span class="fu">...</span> (your fav language) <span class="fu">|</span> <span class="dt">Python</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)
+
+<span class="ot">betterStaticTypes ::</span> <span class="dt">Languages</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+betterStaticTypes lang <span class="fu">=</span> <span class="kw">case</span> lang <span class="kw">of</span>
+  <span class="dt">JavaScript</span>  <span class="ot">-&gt;</span> <span class="dt">False</span>
+  <span class="dt">Ruby</span>        <span class="ot">-&gt;</span> <span class="dt">False</span>
+  <span class="dt">Haskell</span>     <span class="ot">-&gt;</span> <span class="dt">True</span>
+  <span class="dt">Scala</span>       <span class="ot">-&gt;</span> <span class="dt">True</span>
+  <span class="dt">Python</span>      <span class="ot">-&gt;</span> <span class="dt">False</span>
+  <span class="co">-- add a case here</span>
+
+print <span class="fu">$</span> filter betterStaticTypes [<span class="dt">Haskell</span>, <span class="fu">...</span>, (add your language)]</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run --rm -it mmaz/secdev /bin/bash
+$ <span class="kw">secdev&gt;</span> emacs Intro.hs  <span class="co">#switch to pure emacs: SPC t E e</span>
+$ <span class="kw">secdev&gt;</span> ghc -Wall -fforce-recomp Intro.hs
+
+  <span class="kw">Intro.hs</span>:17:26: warning: [-Wincomplete-patterns]
+      <span class="kw">Pattern</span> match(es) <span class="kw">are</span> non-exhaustive
+      <span class="kw">In</span> a case alternative: Patterns not matched: YourLanguage
+
+$ <span class="kw">secdev&gt;</span> runghc Intro.hs
+
+  <span class="kw">...</span>
+  [<span class="kw">Haskell</span>,...your language]
+
+$ <span class="kw">secdev&gt;</span> exit <span class="co">#or Ctrl-D</span></code></pre></div>
+<p>(continuous typechecking: <code>stack build --file-watch --fast</code>)</p>
+</section>
+<section id="exercise-1-the-takeaway" class="slide level1">
+<h1>Exercise 1: The Takeaway</h1>
+<p>Your (deeply nested) data model grows as you refactor</p>
+<p><br/></p>
+<p>You add more cases, you remove old cases</p>
+<p><br/></p>
+<p>GHC checks exhaustiveness at all use-sites</p>
+</section>
+<section id="ex-2-liquidhaskell" class="slide level1">
+<h1>Ex 2: <code>LiquidHaskell</code></h1>
+<p>Verify <code>absolutevalue</code> always returns a positive number:</p>
+<p>Change <code class="sourceCode haskell">x <span class="fu">&lt;</span> <span class="dv">0</span></code> to <code class="sourceCode haskell">x <span class="fu">&gt;</span> <span class="dv">0</span></code> in this example:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">{-@ absolutevalue :: Int -&gt; { n : Int | 0 &lt;= n }    @-}</span>
+<span class="ot">    absolutevalue ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+    absolutevalue x <span class="fu">=</span> <span class="kw">if</span> x <span class="fu">&lt;</span> <span class="dv">0</span> <span class="kw">then</span> negate x <span class="kw">else</span> x</code></pre></div>
+<p><code class="sourceCode haskell">{ n <span class="fu">:</span> <span class="dt">Int</span> <span class="fu">|</span> <span class="dv">0</span> <span class="fu">&lt;=</span> n }</code> returns <code class="sourceCode haskell"><span class="ot">n ::</span> <span class="dt">Int</span></code> such that <code class="sourceCode haskell"><span class="dv">0</span></code> is less than or equal to <code class="redc">n</code></p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run --rm -it mmaz/secdev /bin/bash
+$ <span class="kw">secdev&gt;</span> emacs HelloLiquid.hs  <span class="co">#switch to pure emacs: SPC t E e</span>
+$ <span class="kw">secdev&gt;</span> liquid HelloLiquid.hs
+
+  <span class="kw">****</span> RESULT: SAFE ****
+   <span class="kw">or</span>
+  <span class="kw">****</span> RESULT: UNSAFE ****
+
+$ <span class="kw">secdev&gt;</span> exit <span class="co">#or Ctrl-D</span></code></pre></div>
+</section>
+<section id="liquidhaskell-proofs" class="slide level1">
+<h1><code>LiquidHaskell</code> Proofs</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<figure>
+<img src="img/liquid1.png" />
+</figure>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<ul>
+<li>Binary serialization lib <code>fpco/store</code></li>
+<li>Fast as <code>memcpy</code></li>
+<li>Safe: no access violations outside bytebuffer</li>
+<li>After adding constraints, fails to compile until negative numbers are handled: <img src="img/liquid2.png" /></li>
+</ul>
+</div>
+</div>
+<p><code>LiquidHaskell</code> can enforce many security properties - see HeartBleed example:</p>
+<p><a href="http://ucsd-progsys.github.io/liquidhaskell-tutorial/11-case-study-pointers.html">ucsd-progsys.github.io/liquidhaskell-tutorial/11-case-study-pointers</a></p>
+</section>
+<section id="gaussian-blobs" class="slide level1">
+<h1>Gaussian Blobs</h1>
+<!-- * function `f`{.redc} -->
+<!--     * takes any coordinate `(x,y)`{.redc} -->
+<!--     * evaluates blob value -->
+<!--     * zero at most coordinates -->
+<!--     * `f = alpha`{.redc} at $(x_0, y_0)$ -->
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<figure>
+<img src="img/blob.png" />
+</figure>
+<p><span class="math inline">$f(x,y) = \alpha \cdot \exp(- (\frac{(x - x_0)^2}{2\sigma^2_x} + \frac{(y - y_0)^2}{2\sigma^2_y}))$</span></p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">gaussian <span class="ot">::</span>
+<span class="dt">GaussianParameters</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+<span class="fu">^</span> (sigmas, x0, y0<span class="fu">...</span>)       <span class="fu">^</span> x      <span class="fu">^</span> y      <span class="fu">^</span> f(x,y)</code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">GaussianParameters</span> a <span class="fu">=</span> <span class="dt">GaussianParameters</span> {
+<span class="ot">  sigmaX ::</span> a
+,<span class="ot"> sigmaY ::</span> a
+,<span class="ot"> x0     ::</span> a
+,<span class="ot"> y0     ::</span> a
+,<span class="ot"> alpha  ::</span> a }</code></pre></div>
+<ul>
+<li><code class="magentac">a</code> is a type parameter</li>
+<li>Substitute <code class="sourceCode haskell"><span class="dt">Float</span></code>, <code class="sourceCode haskell"><span class="dt">Double</span></code>, <code class="sourceCode haskell"><span class="dt">Int</span></code> …</li>
+<li><em>constrain</em> <code class="magentac">a</code> with “<code class="sourceCode haskell"><span class="ot">=&gt;</span></code>”</li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">gaussian ::</span> (<span class="dt">Fractional</span> a) <span class="ot">=&gt;</span>
+            <span class="dt">GaussianParameters</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a
+gaussian <span class="dt">GaussianParameters</span>{<span class="fu">..</span>} x y <span class="fu">=</span>
+  alpha <span class="fu">*</span> exp ( negate (  xnumerator <span class="fu">/</span> xdenominator
+                        <span class="fu">+</span> ynumerator <span class="fu">/</span> ydenominator) )
+  <span class="kw">where</span>
+    xnumerator   <span class="fu">=</span> (x <span class="fu">-</span> x0) <span class="fu">**</span> <span class="dv">2</span>
+    xdenominator <span class="fu">=</span> <span class="dv">2</span> <span class="fu">*</span> (sigmaX <span class="fu">**</span> <span class="dv">2</span>)
+    ynumerator   <span class="fu">=</span> (y <span class="fu">-</span> y0) <span class="fu">**</span> <span class="dv">2</span>
+    ydenominator <span class="fu">=</span> <span class="dv">2</span> <span class="fu">*</span> (sigmaY <span class="fu">**</span> <span class="dv">2</span>)</code></pre></div>
+</div>
+</div>
+</section>
+<section id="ghcjs-demo-click-to-try-it" class="slide level1">
+<h1>GHCJS Demo: Click to try it!</h1>
+<div id="runhaskell5" class="runCode">
+
+</div>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div id="topdown">
+
+</div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div id="threed">
+
+</div>
+</div>
+</div>
+<!--
+  --
+  --
+  -- User Input Santization -- Phantom Types
+  --
+  --
+  -->
+</section>
+<section id="phantom-types-for-enforced-sanitization" class="slide level1">
+<h1>Phantom Types for Enforced Sanitization</h1>
+<figure>
+<img src="img/exploits_of_a_mom.png" />
+</figure>
+<div class="footnote">
+<p><a href="https://xkcd.com/327/">Source: XKCD</a></p>
+</div>
+</section>
+<section id="injection-attacks-simplified" class="slide level1">
+<h1>Injection Attacks, Simplified</h1>
+<ul>
+<li><p>Executing user input as code is dangerous!</p></li>
+<li><p>For example, assume you assemble an insert statement by concatenating some strings:</p>
+<div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="ot">&quot;INSERT INTO person (name) VALUES (&#39;&quot;</span> + name + <span class="ot">&quot;&#39;)&quot;</span></code></pre></div></li>
+<li><p>Substitute, for name:</p>
+<div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql">name = Robert<span class="st">&#39;); drop table person; --</span></code></pre></div></li>
+<li><p>And you get:</p>
+<div class="sourceCode"><pre class="sourceCode sql"><code class="sourceCode sql"><span class="kw">INSERT</span> <span class="kw">INTO</span> person (name) <span class="kw">VALUES</span> (<span class="st">&#39;Robert&#39;</span>); <span class="kw">drop</span> <span class="kw">table</span> person; <span class="co">--&#39;)</span></code></pre></div></li>
+</ul>
+</section>
+<section id="lets-get-some-setup-out-of-the-way" class="slide level1">
+<h1>Let’s Get Some Setup Out of the Way</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">initDB ::</span> <span class="dt">IO</span> <span class="dt">Database</span>
+initDB <span class="fu">=</span> <span class="kw">do</span>
+  conn <span class="ot">&lt;-</span> open <span class="st">&quot;:memory:&quot;</span>                                             <span class="co">-- create in memory database</span>
+  exec conn <span class="st">&quot;CREATE TABLE person (id INTEGER PRIMARY KEY, name TEXT)&quot;</span> <span class="co">-- initialize table</span>
+  exec conn <span class="st">&quot;INSERT INTO person (name) VALUES (&#39;Tim&#39;)&quot;</span>
+  exec conn <span class="st">&quot;INSERT INTO person (name) VALUES (&#39;Mark&#39;)&quot;</span>               <span class="co">-- insert some data</span>
+  exec conn <span class="st">&quot;INSERT INTO person (name) VALUES (&#39;Sarah&#39;)&quot;</span>
+  return conn                                                         <span class="co">-- return connection for future access to DB</span>
+
+<span class="ot">readDB ::</span> <span class="dt">Database</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+readDB <span class="fu">=</span> flip execPrint <span class="st">&quot;select * from person&quot;</span>                        <span class="co">-- print database contents to stdout</span>
+
+<span class="ot">closeDB ::</span> <span class="dt">Database</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+closeDB <span class="fu">=</span>  close                                                      <span class="co">-- cleanup database</span></code></pre></td></tr></table></div>
+<p>(raw SQL statements are in green doublequotes)</p>
+</section>
+<section id="remember-to-sanitize-user-input" class="slide level1">
+<h1>Remember to Sanitize User Input</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">insertDB ::</span> <span class="dt">Database</span> <span class="ot">-&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()                               <span class="co">-- make the horrible mistake of</span>
+insertDB conn name <span class="fu">=</span>                                                <span class="co">-- building up an insert statement by</span>
+  exec conn <span class="fu">$</span> <span class="st">&quot;INSERT INTO person (name) VALUES (&#39;&quot;</span> <span class="fu">&lt;&gt;</span> name <span class="fu">&lt;&gt;</span> <span class="st">&quot;&#39;)&quot;</span> <span class="co">-- string concatenation</span>
+
+<span class="co">-- Please don&#39;t use this sanitization function in real life!</span>
+<span class="ot">sanitize ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Text</span>                                            <span class="co">-- hokey sanitization function that strips</span>
+sanitize <span class="fu">=</span>                                                          <span class="co">-- off the rest of the sql statement once</span>
+  takeWhile (<span class="ot">`notElem`</span> [<span class="ch">&#39;;&#39;</span>,<span class="ch">&#39;\&#39;&#39;</span>,<span class="ch">&#39;&quot;&#39;</span>])                              <span class="co">-- it encounters one of [; &#39; &quot;]</span></code></pre></td></tr></table></div>
+<p>Sanitization will only work if the developer remembers to call sanitize before every call to <code class="sourceCode haskell">insertDB</code></p>
+</section>
+<section id="lets-get-some-help-from-the-type-system" class="slide level1">
+<h1>Let’s Get Some Help From the Type System</h1>
+</section>
+<section id="phantom-types" class="slide level1">
+<h1>Phantom Types</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<p>Lame types</p>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<p>Fancy types</p>
+</div>
+</div>
+<div class="fragment">
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<p>types narrowed from any <code class="sourceCode haskell"><span class="dt">Text</span></code></p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">UserInput</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<p>types differentiate safe and unsafe</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">UserInput</span> <span class="dt">Clean</span>, <span class="dt">UserInput</span> <span class="dt">Dirty</span></code></pre></div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<p>augment with cleanliness flag</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">UserInput</span> <span class="fu">=</span> <span class="dt">UserInput</span> {
+<span class="ot">    input   ::</span> <span class="dt">Text</span>
+  ,<span class="ot"> isClean ::</span> <span class="dt">Boolean</span>
+}</code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<p>cleanliness maintained in the type</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Clean</span>
+<span class="kw">data</span> <span class="dt">Dirty</span>
+
+<span class="kw">newtype</span> <span class="dt">UserInput</span> a <span class="fu">=</span> <span class="dt">UserInput</span> {<span class="ot"> input ::</span> <span class="dt">Text</span> }</code></pre></div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<p>runtime validation, error handling</p>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<p>compile time verification</p>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<p>carry additional boolean etc. at runtime</p>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<p>no runtime cost</p>
+</div>
+</div>
+</div>
+</section>
+<section id="a-phantom-user-input" class="slide level1">
+<h1>A Phantom User Input</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">MySafeStore</span>                    <span class="co">-- carefully control what is visible outside of module</span>
+  (
+    <span class="fu">...</span>
+
+  , <span class="dt">UserInput</span>                         <span class="co">-- only export the type of UserInput, not its constructor</span>
+  , readInput                         <span class="co">-- export readInput so we can convert Text to UserInput</span>
+
+  ) <span class="kw">where</span>
+
+<span class="kw">data</span> <span class="dt">Clean</span>                            <span class="co">-- create types Clean and Dirty, with no values</span>
+<span class="kw">data</span> <span class="dt">Dirty</span>
+
+<span class="kw">newtype</span> <span class="dt">UserInput</span> a <span class="fu">=</span> <span class="dt">UserInput</span> {     <span class="co">-- put phantom type parameter a in UserInput</span>
+<span class="ot">  input ::</span> <span class="dt">Text</span>
+}
+
+<span class="ot">readInput ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">UserInput</span> <span class="dt">Dirty</span>  <span class="co">-- force bare Text values to begin life Dirty</span>
+readInput <span class="fu">=</span> <span class="dt">UserInput</span></code></pre></td></tr></table></div>
+</section>
+<section id="phantoms-can-force-cleanliness" class="slide level1">
+<h1>Phantoms Can Force Cleanliness</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">insertDB ::</span> <span class="dt">DataStore</span> <span class="ot">-&gt;</span> <span class="dt">UserInput</span> <span class="dt">Clean</span> <span class="ot">-&gt;</span> <span class="dt">IO</span> ()                         <span class="co">-- we still concatenate strings to</span>
+insertDB <span class="dt">DataStore</span>{<span class="fu">..</span>} <span class="dt">UserInput</span>{<span class="fu">..</span>} <span class="fu">=</span>                                    <span class="co">-- build up sql statements, but we</span>
+  exec conn <span class="fu">$</span> <span class="st">&quot;INSERT INTO person (name) VALUES (&#39;&quot;</span> <span class="fu">&lt;&gt;</span> input <span class="fu">&lt;&gt;</span> <span class="st">&quot;&#39;)&quot;</span>      <span class="co">-- only accept sanitized input</span>
+
+<span class="co">-- Please don&#39;t use this sanitization function in real life!</span>
+<span class="ot">sanitize ::</span> <span class="dt">UserInput</span> <span class="dt">Dirty</span> <span class="ot">-&gt;</span> <span class="dt">UserInput</span> <span class="dt">Clean</span>                            <span class="co">-- the only public way to</span>
+sanitize <span class="fu">=</span>                                                                <span class="co">-- sanitize a UserInput Dirty</span>
+  <span class="dt">UserInput</span> <span class="fu">.</span> takeWhile (<span class="ot">`notElem`</span> [<span class="ch">&#39;;&#39;</span>,<span class="ch">&#39;\&#39;&#39;</span>,<span class="ch">&#39;&quot;&#39;</span>]) <span class="fu">.</span> input</code></pre></td></tr></table></div>
+<ul>
+<li>Only way to convert a <code class="sourceCode haskell"><span class="dt">UserInput</span> <span class="dt">Dirty</span></code> into a <code class="sourceCode haskell"><span class="dt">UserInput</span> <span class="dt">Clean</span></code> is <code class="sourceCode haskell">sanitize</code></li>
+</ul>
+</section>
+<section id="exercise-3-sql-injection" class="slide level1">
+<h1>Exercise 3 – SQL Injection</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span> main1 <span class="co">-- unsanitized version</span>
+
+main1 <span class="fu">=</span> <span class="kw">do</span>
+  conn <span class="ot">&lt;-</span> initDB
+  print <span class="st">&quot;Contents of initial database:&quot;</span>
+  readDB conn
+
+  insertDB conn <span class="st">&quot;Haskell Curry&quot;</span>
+  print <span class="st">&quot;Contents after insert of our saint&quot;</span>
+  readDB conn
+
+  insertDB conn (sanitize <span class="st">&quot;Evil&#39;); drop table person; --&quot;</span>)
+  print <span class="st">&quot;Contents after allowing my sadistic co-worker to use my library&quot;</span>
+  readDB conn
+
+  insertDB conn <span class="st">&quot;Evil&#39;); drop table person; --&quot;</span>
+  print <span class="st">&quot;Contents after allowing my sadistic co-worker to use my library a second time&quot;</span>
+  readDB conn
+<span class="co">{-</span>
+<span class="co">main2 :: IO ()</span>
+<span class="co">main2 = ...</span>
+<span class="co">-}</span></code></pre></td></tr></table></div>
+<pre><code>$ docker run --rm -it mmaz/secdev /bin/bash
+$ secdev&gt; stack runghc PhantomTypes.hs</code></pre>
+<ul>
+<li>Play with the unsafe version, making edits</li>
+<li>Uncomment <code>main2</code>, import safe module, update <code>main</code>, and discover that you can no longer inject</li>
+</ul>
+</section>
+<section id="exercise-3-the-takeaway" class="slide level1">
+<h1>Exercise 3 – The Takeaway</h1>
+<ul>
+<li>GHC won’t compile unsanitized user input
+<ul>
+<li>Insecure code is unrepresentable</li>
+</ul></li>
+</ul>
+<!--
+  --
+  --
+  -- Servant
+  --
+  --
+  -->
+</section>
+<section id="servant-a-web-api-as-a-type" class="slide level1">
+<h1>Servant – A Web API as a Type</h1>
+<figure>
+<img src="img/api.png" />
+</figure>
+<div class="footnote">
+<p><a href="https://xkcd.com/1481/">Source: XKCD</a></p>
+</div>
+</section>
+<section id="crash-course-on-json" class="slide level1">
+<h1>Crash Course on JSON</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">HelloWorld</span> <span class="fu">=</span> <span class="dt">HelloWorld</span>          <span class="co">-- create a new type called HelloWorld</span>
+
+<span class="kw">instance</span> <span class="dt">ToJSON</span> <span class="dt">HelloWorld</span> <span class="kw">where</span>      <span class="co">-- manual JSON definition</span>
+  toJSON <span class="fu">=</span>
+    const <span class="fu">$</span> object [ <span class="st">&quot;hello&quot;</span> <span class="fu">.=</span> (<span class="st">&quot;world&quot;</span><span class="ot"> ::</span> <span class="dt">Text</span>) ]</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;&gt;&gt;</span> encode <span class="dt">HelloWorld</span>
+{<span class="st">&quot;hello&quot;</span><span class="fu">:</span><span class="st">&quot;world&quot;</span>}</code></pre></div>
+<div class="fragment">
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Car</span> <span class="fu">=</span> <span class="dt">Car</span> {
+<span class="ot">  make  ::</span> <span class="dt">String</span>
+,<span class="ot"> model ::</span> <span class="dt">String</span>
+,<span class="ot"> year  ::</span> <span class="dt">Int</span>
+} <span class="kw">deriving</span> (<span class="dt">Generic</span>)
+<span class="kw">instance</span> <span class="dt">ToJSON</span> <span class="dt">Car</span>
+<span class="co">--Generic: figure out how to JSON for me!</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;&gt;&gt;</span> mycar <span class="fu">=</span> <span class="dt">Car</span> <span class="st">&quot;Toyota&quot;</span> <span class="st">&quot;Prius&quot;</span> <span class="dv">2013</span>
+         <span class="co">-- Car(&quot;Toyota&quot;, &quot;Prius&quot;, 2013)</span>
+
+<span class="fu">&gt;&gt;&gt;</span> encode mycar
+{<span class="st">&quot;year&quot;</span><span class="fu">:</span><span class="dv">2013</span>,<span class="st">&quot;model&quot;</span><span class="fu">:</span><span class="st">&quot;Prius&quot;</span>,<span class="st">&quot;make&quot;</span><span class="fu">:</span><span class="st">&quot;Toyota&quot;</span>}</code></pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="datakinds-values-to-types" class="slide level1">
+<h1><code>DataKinds</code>: Values to Types</h1>
+<ul>
+<li><p><code class="magentac">3</code> is a <code class="redc">Value</code></p></li>
+<li><p><code class="sourceCode haskell"><span class="dt">Int</span></code> is a <code class="greenc">Type</code></p></li>
+<li><p><code class="sourceCode haskell"><span class="dt">DataKinds</span></code> promotes <code class="redc">Value</code>s to <code class="greenc">Type</code>s</p></li>
+<li>URL path components <code class="magentac">foo</code> and <code class="magentac">bar</code>
+<ul>
+<li>without <code class="sourceCode haskell"><span class="dt">DataKinds</span></code>, they’re <code class="sourceCode haskell"><span class="dt">String</span></code> values</li>
+</ul></li>
+<li><p>Type-level strings promote a route <code class="greenc">/foo/bar</code> to a type</p></li>
+</ul>
+<p>Blogpost with details: <a href="http://www.arow.info/blog/posts/2015-07-10-servant-intro.html">arow.info/blog/posts/2015-07-10-servant-intro</a></p>
+</section>
+<section id="web-services-with-servant" class="slide level1">
+<h1>Web Services with Servant</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">--  represent &#39;GET /sayhello/&#39; as a type:</span>
+
+<span class="kw">type</span> <span class="dt">API</span> <span class="fu">=</span> <span class="st">&quot;sayhello&quot;</span> <span class="fu">:&gt;</span> <span class="dt">Get</span> <span class="ch">&#39;[JSON] HelloWorld</span>
+
+helloHandler <span class="fu">=</span> return <span class="dt">HelloWorld</span>                           <span class="co">-- {&quot;hello&quot;:&quot;world&quot;}</span>
+
+main <span class="fu">=</span> run <span class="dv">8080</span> <span class="fu">$</span> serve (<span class="dt">Proxy</span><span class="ot"> ::</span> <span class="dt">Proxy</span> <span class="dt">API</span>) helloHandler  <span class="co">-- serve on port 8080</span></code></pre></div>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<p>In one terminal window:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run -p 8080:8080 --rm -it mmaz/secdev /bin/hello-servant</code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<p>In another terminal window:</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">curl</span> localhost:8080/sayhello
+<span class="dt">{&quot;hello&quot;:&quot;world&quot;}</span></code></pre></div>
+</div>
+</div>
+</section>
+<section id="web-services-with-servant-1" class="slide level1">
+<h1>Web Services with Servant</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- the type of &#39;GET /tesla/Int&#39;</span>
+<span class="kw">type</span> <span class="dt">API</span> <span class="fu">=</span> <span class="st">&quot;tesla&quot;</span> <span class="fu">:&gt;</span> <span class="dt">Capture</span> <span class="st">&quot;year&quot;</span> <span class="dt">Int</span>  <span class="fu">:&gt;</span> <span class="dt">Get</span> <span class="ch">&#39;[JSON] Car</span>
+
+<span class="ot">carHandler ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">Car</span>
+carHandler inputyear
+  <span class="fu">|</span> inputyear <span class="fu">&lt;</span> <span class="dv">2012</span> <span class="fu">=</span>  throwError <span class="fu">$</span> err501 { errBody <span class="fu">=</span> <span class="st">&quot;too old!&quot;</span>}
+  <span class="fu">|</span> otherwise        <span class="fu">=</span>  return <span class="fu">$</span> <span class="dt">Car</span> <span class="st">&quot;Tesla&quot;</span> <span class="st">&quot;Model S&quot;</span> inputyear
+
+
+main <span class="fu">=</span> run <span class="dv">8080</span> <span class="fu">$</span> serve (<span class="dt">Proxy</span><span class="ot"> ::</span> <span class="dt">Proxy</span> <span class="dt">API</span>) carHandler</code></pre></div>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">docker</span> run -p 8080:8080 --rm -it mmaz/secdev /bin/hello-servant</code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">curl</span> localhost:8080/tesla/2011
+<span class="st">&quot;too old!&quot;</span>
+$ <span class="kw">curl</span> localhost:8080/tesla/2016
+{<span class="st">&quot;year&quot;</span>:<span class="kw">2016</span>,<span class="st">&quot;model&quot;</span>:<span class="st">&quot;Model S&quot;</span>,<span class="st">&quot;make&quot;</span>:<span class="st">&quot;Tesla&quot;</span>}</code></pre></div>
+</div>
+</div>
+</section>
+<section id="types-as-a-lightweight-specification" class="slide level1">
+<h1>Types as a Lightweight Specification</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Status</span> <span class="fu">=</span> <span class="dt">OK</span> <span class="fu">|</span> <span class="dt">Fail</span>
+  <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>, <span class="dt">Read</span>, <span class="dt">Ord</span>, <span class="dt">Eq</span>)
+
+<span class="kw">data</span> <span class="dt">Log</span> <span class="fu">=</span> <span class="dt">Log</span> {
+<span class="ot">  ident ::</span> <span class="dt">Int</span>
+,<span class="ot"> timestamp ::</span> <span class="dt">Int</span>
+,<span class="ot"> message ::</span> <span class="dt">Text</span>
+} <span class="kw">deriving</span> (<span class="dt">Generic</span>, <span class="dt">Show</span>, <span class="dt">Typeable</span>)</code></pre></td></tr></table></div>
+<div class="fragment">
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--8-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">LogApi</span> <span class="fu">=</span> <span class="st">&quot;logs&quot;</span> <span class="fu">:&gt;</span> <span class="dt">Get</span> <span class="ch">&#39;[JSON] [Log]</span>
+         <span class="fu">:&lt;|&gt;</span> <span class="st">&quot;log&quot;</span>  <span class="fu">:&gt;</span> <span class="dt">ReqBody</span> <span class="ch">&#39;[JSON] Log :&gt; Post &#39;</span>[<span class="dt">PlainText</span>] <span class="dt">Status</span>
+         <span class="fu">:&lt;|&gt;</span> <span class="st">&quot;log&quot;</span>  <span class="fu">:&gt;</span> <span class="dt">Capture</span> <span class="st">&quot;id&quot;</span> <span class="dt">Int</span> <span class="fu">:&gt;</span> <span class="dt">Get</span> <span class="ch">&#39;[JSON] Log</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--4-col">
+<div class="sourceCode"><pre class="sourceCode html"><code class="sourceCode html">GET /logs
+POST {JSON content} /log
+GET /log/1</code></pre></div>
+</div>
+</div>
+<p>The API type specifies the http method, argument types, and return types</p>
+</div>
+</section>
+<section id="exercise-4-match-servant-api-to-handlers" class="slide level1">
+<h1>Exercise 4 – Match Servant API To Handlers</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">server ::</span> <span class="dt">Server</span> <span class="dt">LogApi</span>
+server <span class="fu">=</span> undefined <span class="fu">:&lt;|&gt;</span> undefined <span class="fu">:&lt;|&gt;</span> undefined <span class="co">-- line 68</span>
+
+<span class="ot">foo ::</span> <span class="dt">Log</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">Status</span>
+foo _ <span class="fu">=</span> return <span class="dt">OK</span>
+
+<span class="ot">bar ::</span> <span class="dt">Handler</span> [<span class="dt">Log</span>]
+bar <span class="fu">=</span> return [
+    <span class="dt">Log</span> {ident <span class="fu">=</span> <span class="dv">1</span>, timestamp <span class="fu">=</span> <span class="dv">101</span>, message <span class="fu">=</span> <span class="st">&quot;msg1&quot;</span>}
+  , <span class="dt">Log</span> {ident <span class="fu">=</span> <span class="dv">2</span>, timestamp <span class="fu">=</span> <span class="dv">201</span>, message <span class="fu">=</span> <span class="st">&quot;msg2&quot;</span>}
+  ]
+
+<span class="ot">baz ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">Log</span>
+baz n <span class="fu">=</span> return <span class="dt">Log</span> {ident <span class="fu">=</span> n, timestamp <span class="fu">=</span> <span class="dv">102</span>, message <span class="fu">=</span> <span class="st">&quot;message&quot;</span>}</code></pre></td></tr></table></div>
+<ul>
+<li>Compiler checked server implementation</li>
+<li>Server is combination of handlers</li>
+<li>Task: fill in server implementation</li>
+</ul>
+<pre><code>$ docker run -p 8080:8080 --rm -it mmaz/secdev /bin/bash
+$ secdev&gt; emacs LogApi.hs #edit line 68
+$ secdev&gt; stack runghc LogApi.hs</code></pre>
+</section>
+<section id="leveraging-the-specification" class="slide level1">
+<h1>Leveraging the Specification</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Generate clients for our api</span>
+(getLogs <span class="fu">:&lt;|&gt;</span> postLog <span class="fu">:&lt;|&gt;</span> getLogById) <span class="fu">=</span> client logApi
+
+<span class="co">-- Generate Swagger specification of api</span>
+<span class="ot">swaggerDocs ::</span> <span class="dt">Swagger</span>
+swaggerDocs <span class="fu">=</span> toSwagger logApi</code></pre></div>
+<ul>
+<li>Types specific enough to generate clients and Swagger API specification</li>
+<li>Swagger specification can generate clients in many languages</li>
+<li>Type-checked documentation, never out of sync!</li>
+</ul>
+</section>
+<section id="swagger-docs-generated-for-logapi" class="slide level1">
+<h1>Swagger Docs Generated for LogApi</h1>
+<figure>
+<img src="img/swagger-logs.png" style="width:80.0%" />
+</figure>
+</section>
+<section id="swagger-docs-generated-for-logapi-1" class="slide level1">
+<h1>Swagger Docs Generated for LogApi</h1>
+<figure>
+<img src="img/swagger-log-post.png" style="width:80.0%" />
+</figure>
+</section>
+<section id="swagger-docs-generated-for-logapi-2" class="slide level1">
+<h1>Swagger Docs Generated for LogApi</h1>
+<figure>
+<img src="img/swagger-log-get.png" style="width:80.0%" />
+</figure>
+<!-------------------------------------------
+  --                                       --
+  --                                       --
+  -- Functional Reactive Programming       --
+  --                                       --
+  --                                       --
+  ------------------------------------------->
+</section>
+<section id="functional-reactive-programming" class="slide level1">
+<h1>Functional Reactive Programming</h1>
+<figure>
+<img src="img/functional.png" />
+</figure>
+<div class="footnote">
+<p><a href="https://xkcd.com/1270/">Source: XKCD</a></p>
+</div>
+</section>
+<section id="reflex-a-frp-library-for-haskell" class="slide level1">
+<h1>Reflex – a FRP Library for Haskell</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--2-col">
+
+</div>
+<div class="mdl-cell mdl-cell--4-col">
+<figure>
+<img src="img/behavior.png" style="width:100.0%" />
+</figure>
+</div>
+<div class="mdl-cell mdl-cell--4-col">
+<figure>
+<img src="img/event.png" style="width:100.0%" />
+</figure>
+</div>
+<div class="mdl-cell mdl-cell--2-col">
+
+</div>
+</div>
+<ul>
+<li>Web bindings through <code>reflex-dom</code>
+<ul>
+<li>Haskell code compiled to Javascript via GHCJS</li>
+</ul></li>
+<li>FRP abstractions from Reflex:
+<ul>
+<li>Behavior - value as a function of time</li>
+<li>Event - stream of discrete values</li>
+<li>Dynamic - some combination of the above</li>
+</ul></li>
+</ul>
+</section>
+<section id="point-of-order" class="slide level1">
+<h1>Point of Order</h1>
+<p>Many of the following slides will have the format: code snippet followed by the rendered results of executing that code in the DOM.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- haskell code snippet that executes</span>
+<span class="co">-- changes to the DOM, results of which</span>
+<span class="co">-- would be rendered below</span></code></pre></div>
+<div class="runCode" style="margin-top: 2em;">
+<p>divs like this are results of executing code snippets</p>
+</div>
+</section>
+<section id="reflex-example-1" class="slide level1">
+<h1>Reflex Example (1)</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">start ::</span> <span class="dt">MonadWidget</span> t m <span class="ot">=&gt;</span> m ()
+start <span class="fu">=</span> <span class="kw">do</span>
+  el <span class="st">&quot;div&quot;</span> (text <span class="st">&quot;hello&quot;</span>)</code></pre></td></tr></table></div>
+<div id="runhaskell4" class="runCode">
+
+</div>
+</section>
+<section id="maps-and-folds" class="slide level1">
+<h1>Maps and Folds</h1>
+<p>Some useful functions:</p>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--2-col">
+
+</div>
+<div class="mdl-cell mdl-cell--4-col">
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell">fmap<span class="ot"> ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
+fmap <span class="fu">=</span> <span class="fu">...</span>
+
+<span class="ot">fold ::</span> (a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> b
+fold <span class="fu">=</span> <span class="fu">...</span>
+
+const<span class="ot"> ::</span> a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> a
+const <span class="fu">=</span> <span class="fu">...</span></code></pre></td></tr></table></div>
+</div>
+<div class="mdl-cell mdl-cell--4-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;&gt;&gt;</span> fmap (plus <span class="dv">5</span>) [<span class="dv">0</span>,<span class="dv">3</span>]
+[<span class="dv">5</span>,<span class="dv">8</span>]
+
+<span class="fu">&gt;&gt;&gt;</span> fold plus <span class="dv">0</span> [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>]
+<span class="dv">10</span> <span class="co">-- == 0 + 1 + 2 + 3 + 4</span>
+
+<span class="fu">&gt;&gt;&gt;</span> const <span class="st">&quot;foo&quot;</span> <span class="st">&quot;bar&quot;</span>
+<span class="st">&quot;foo&quot;</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--2-col">
+
+</div>
+</div>
+</section>
+<section id="reflex-example-2" class="slide level1">
+<h1>Reflex Example (2)</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">start ::</span> <span class="dt">MonadWidget</span> t m <span class="ot">=&gt;</span> m ()
+start <span class="fu">=</span> mdo
+  inp <span class="ot">&lt;-</span> mdlInput <span class="st">&quot;&quot;</span>                  <span class="co">-- create input element</span>
+  <span class="kw">let</span> inpEv   <span class="fu">=</span> _textInput_input inp  <span class="co">-- grab the keypress events</span>
+
+  inpValDyn <span class="ot">&lt;-</span> foldDyn const <span class="st">&quot;&quot;</span> inpEv <span class="co">-- build dynamic from input events</span>
+
+  el <span class="st">&quot;div&quot;</span> (display inpValDyn)        <span class="co">-- render contents of above dynamic</span></code></pre></td></tr></table></div>
+<div id="runhaskell3" class="runCode">
+
+</div>
+</section>
+<section id="reflex-example-3" class="slide level1">
+<h1>Reflex Example (3)</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">start ::</span> <span class="dt">MonadWidget</span> t m <span class="ot">=&gt;</span> m ()
+start <span class="fu">=</span> mdo
+  inp <span class="ot">&lt;-</span> mdlInput&#39; <span class="st">&quot;&quot;</span> clickEv                      <span class="co">-- create input element</span>
+  b   <span class="ot">&lt;-</span> btn <span class="st">&quot;clear&quot;</span>                               <span class="co">-- create button</span>
+
+  <span class="kw">let</span> inpEv   <span class="fu">=</span> _textInput_input inp               <span class="co">-- grab input events</span>
+      clickEv <span class="fu">=</span> fmap (const <span class="st">&quot;&quot;</span>) (domEvent <span class="dt">Click</span> b) <span class="co">-- grab button click events</span>
+      combEv  <span class="fu">=</span> appendEvents clickEv inpEv         <span class="co">-- merge input and click events</span>
+
+  inpValDyn <span class="ot">&lt;-</span> foldDyn const <span class="st">&quot;&quot;</span> combEv             <span class="co">-- create dynamic over combined events</span>
+
+  el <span class="st">&quot;div&quot;</span> (display inpValDyn)                     <span class="co">-- render contents of dynammic</span></code></pre></td></tr></table></div>
+<div id="runhaskell2" class="runCode">
+
+</div>
+</section>
+<section id="xss-executing-user-code-within-the-browser" class="slide level1">
+<h1>XSS – Executing User Code Within the Browser</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">start ::</span> <span class="dt">MonadWidget</span> t m <span class="ot">=&gt;</span> m ()
+start <span class="fu">=</span> grid <span class="fu">$</span> <span class="kw">do</span>
+  cell2 blank
+  cell8 <span class="fu">$</span> <span class="kw">do</span>
+    <span class="kw">let</span> defInp  <span class="fu">=</span> <span class="st">&quot;&lt;span&gt;spooky user input&lt;/span&gt;&quot;</span>
+
+    inp <span class="ot">&lt;-</span> mdlInput defInp                                 <span class="co">-- create input element</span>
+    <span class="kw">let</span> inpEv   <span class="fu">=</span> _textInput_input inp                     <span class="co">-- grab input events</span>
+
+    safeDyn   <span class="ot">&lt;-</span> foldDyn (\n _ <span class="ot">-&gt;</span> sanitize n) defInp inpEv <span class="co">-- dynamic with sanitized input</span>
+    unsafeDyn <span class="ot">&lt;-</span> foldDyn const defInp inpEv                <span class="co">-- dynamic with raw input</span>
+
+    grid <span class="fu">$</span> <span class="kw">do</span>
+      cell5 <span class="fu">$</span> mdlTitleCard <span class="st">&quot;Sanitized&quot;</span>    <span class="st">&quot;clsf&quot;</span>   <span class="fu">$</span> elDynHtml&#39; <span class="st">&quot;span&quot;</span> safeDyn
+      cell2 blank
+      cell5 <span class="fu">$</span> mdlTitleCard <span class="st">&quot;Un-Sanitized&quot;</span> <span class="st">&quot;clunsf&quot;</span> <span class="fu">$</span> elDynHtml&#39; <span class="st">&quot;span&quot;</span> unsafeDyn
+    blank
+  cell2 blank</code></pre></td></tr></table></div>
+<div id="runhaskell1" class="runCode">
+
+</div>
+</section>
+<section id="xss-wrapping-a-library-for-safety" class="slide level1">
+<h1>XSS – Wrapping a Library for Safety</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="co">-- unsafe function which is hidden from library users</span>
+<span class="ot">elDynHtmlUnsafe ::</span> <span class="dt">MonadWidget</span> t m <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Dynamic</span> t <span class="dt">Text</span> <span class="ot">-&gt;</span> m (<span class="dt">El</span> t)
+elDynHtmlUnsafe e <span class="fu">=</span> <span class="fu">...</span>
+
+<span class="co">-- safe version of elDynHtmlUnsafe (only this function is exposed to users)</span>
+<span class="ot">elDynHtml ::</span> <span class="dt">MonadWidget</span> t m <span class="ot">=&gt;</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Dynamic</span> t (<span class="dt">UserInput</span> <span class="dt">Clean</span>) <span class="ot">-&gt;</span> m (<span class="dt">El</span> t)
+elDynHtml e <span class="fu">=</span> elDynHtmlUnsafe e <span class="fu">.</span> fmap getInput</code></pre></td></tr></table></div>
+<p>Same idea as database example – potentially unsafe functions now only accept properly sanitized input</p>
+</section>
+<section id="complete-xss-example-server" class="slide level1">
+<h1>Complete XSS Example – Server</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">SanitizeApi</span> <span class="fu">=</span>
+       <span class="st">&quot;sanitize&quot;</span> <span class="fu">:&gt;</span> <span class="dt">ReqBody</span> <span class="ch">&#39;[PlainText] Text :&gt; Post &#39;</span>[<span class="dt">PlainText</span>] <span class="dt">Text</span> <span class="co">-- POST for sanitization</span>
+  <span class="fu">:&lt;|&gt;</span> <span class="dt">Raw</span>                                                               <span class="co">-- serve static content</span>
+
+<span class="ot">sanitizer ::</span> <span class="dt">Text</span> <span class="ot">-&gt;</span> <span class="dt">Handler</span> <span class="dt">Text</span>                                        <span class="co">-- Servant handler that</span>
+sanitizer <span class="fu">=</span> return <span class="fu">.</span> sanitize                                            <span class="co">-- wrap our friend sanitize</span>
+
+<span class="ot">endpoints ::</span> <span class="dt">Server</span> <span class="dt">SanitizeApi</span>
+endpoints <span class="fu">=</span> sanitizer <span class="fu">:&lt;|&gt;</span> serveDirectory <span class="st">&quot;static&quot;</span>                       <span class="co">-- the server</span>
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span> run <span class="dv">8080</span> <span class="fu">$</span> serve (<span class="dt">Proxy</span><span class="ot"> ::</span> <span class="dt">Proxy</span> <span class="dt">SanitizeApi</span>) endpoints           <span class="co">-- run the thing</span></code></pre></td></tr></table></div>
+<p>Simple server serves some static content (index.html, css, js) and provides a post function to sanitize content</p>
+</section>
+<section id="complete-xss-example-sanitize-request" class="slide level1">
+<h1>Complete XSS Example – Sanitize Request</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="ot">sanitize ::</span> <span class="dt">MonadWidget</span> t m <span class="ot">=&gt;</span> <span class="dt">Event</span> t (<span class="dt">UserInput</span> <span class="dt">Dirty</span>) <span class="ot">-&gt;</span> m (<span class="dt">Event</span> t (<span class="dt">UserInput</span> <span class="dt">Clean</span>))
+sanitize inp <span class="fu">=</span> <span class="kw">do</span>
+  evResp <span class="ot">&lt;-</span> performRequestAsync <span class="fu">$</span> fmap makeReq inp        <span class="co">-- build a XhrRequest and send it</span>
+
+  <span class="kw">let</span> evInp <span class="fu">=</span> _xhrResponse_responseText <span class="fu">&lt;$&gt;</span> evResp        <span class="co">-- when the XhrResponse Event fires, wrap</span>
+  return <span class="fu">$</span> fmap (maybe (<span class="dt">UserInput</span> <span class="st">&quot;&quot;</span>) <span class="dt">UserInput</span>) evInp    <span class="co">-- up in the correct UserInput type</span>
+
+<span class="ot">makeReq ::</span> <span class="dt">UserInput</span> <span class="dt">Dirty</span> <span class="ot">-&gt;</span> <span class="dt">XhrRequest</span> <span class="dt">Text</span>             <span class="co">-- plumbing for building up the XhrRequest</span>
+makeReq inp <span class="fu">=</span>
+  xhrRequest
+    <span class="st">&quot;POST&quot;</span> <span class="st">&quot;/sanitize&quot;</span>
+    (def {_xhrRequestConfig_sendData <span class="fu">=</span> (getInput inp)} )</code></pre></td></tr></table></div>
+<p>Upon every key press, we send the input back to the server to sanitize it.</p>
+</section>
+<section id="complete-xss-example-demo" class="slide level1">
+<h1>Complete XSS Example – Demo</h1>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">docker</span> run -p 8080:8080 --rm -it mmaz/secdev /bin/bash -c <span class="st">&quot;cd /root/examples/reflex-ghcjs-server; stack exec server&quot;</span></code></pre></div>
+</section>
+<section id="ex-5-type-level-functions" class="slide level1">
+<h1>Ex 5: Type-Level Functions</h1>
+<div class="sourceCode"><table class="sourceCode haskell numberLines"><tr class="sourceCode"><td class="lineNumbers"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+</pre></td><td class="sourceCode"><pre><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Democrat</span>   <span class="fu">=</span> <span class="dt">Obama</span>   <span class="fu">|</span> <span class="dt">LBJ</span>                     <span class="co">-- create some enums</span>
+<span class="kw">data</span> <span class="dt">Republican</span> <span class="fu">=</span> <span class="dt">Lincoln</span> <span class="fu">|</span> <span class="dt">Eisenhower</span>
+
+<span class="kw">class</span> (<span class="dt">Policy</span> p) <span class="ot">=&gt;</span> <span class="dt">Politician</span> p <span class="kw">where</span>              <span class="co">-- define Policy, scoped to specific party</span>
+  <span class="kw">data</span> <span class="dt">Policy</span><span class="ot"> p ::</span> <span class="fu">*</span>
+<span class="ot">  govern ::</span> p <span class="ot">-&gt;</span> <span class="dt">Policy</span> p
+
+<span class="kw">instance</span> <span class="dt">Politician</span> <span class="dt">Democrat</span> <span class="kw">where</span>                  <span class="co">-- define Democrats, with their policies</span>
+  <span class="kw">data</span> <span class="dt">Policy</span> <span class="dt">Democrat</span> <span class="fu">=</span> <span class="dt">Obamacare</span> <span class="fu">|</span> <span class="dt">CivilRights</span>
+  govern <span class="dt">Obama</span> <span class="fu">=</span> <span class="dt">Obamacare</span>
+  govern <span class="dt">LBJ</span>   <span class="fu">=</span> <span class="dt">CivilRights</span>
+
+<span class="kw">instance</span> <span class="dt">Politician</span> <span class="dt">Republican</span> <span class="kw">where</span>                <span class="co">-- define Republicans, with their policies</span>
+  <span class="kw">data</span> <span class="dt">Policy</span> <span class="dt">Republican</span> <span class="fu">=</span> <span class="dt">EstablishNASA</span> <span class="fu">|</span> <span class="dt">ThirteenthAmendment</span>
+  govern <span class="dt">Lincoln</span>    <span class="fu">=</span> <span class="dt">ThirteenthAmendment</span>
+  govern <span class="dt">Eisenhower</span> <span class="fu">=</span> <span class="dt">EstablishNASA</span>
+
+<span class="kw">data</span> <span class="dt">Strategy</span> <span class="fu">=</span> <span class="dt">Subsidize</span> <span class="fu">|</span> <span class="dt">Amend</span> <span class="fu">|</span> <span class="dt">Legislate</span>       <span class="co">-- one more enum</span>
+
+<span class="kw">class</span> (<span class="dt">Politician</span> p) <span class="ot">=&gt;</span> <span class="dt">Enact</span> p <span class="kw">where</span>               <span class="co">-- politicians are only allowed to enact</span>
+<span class="ot">  enact ::</span> p <span class="ot">-&gt;</span> <span class="dt">Strategy</span>                            <span class="co">-- their own policies</span>
+
+<span class="kw">instance</span> <span class="dt">Enact</span> <span class="dt">Democrat</span> <span class="kw">where</span>
+  enact p <span class="fu">=</span> <span class="kw">case</span> govern p <span class="kw">of</span>                        <span class="co">-- type level determination of allowed</span>
+    <span class="dt">Obamacare</span>   <span class="ot">-&gt;</span> <span class="dt">Subsidize</span>                        <span class="co">-- policies for Democrats</span>
+    <span class="dt">CivilRights</span> <span class="ot">-&gt;</span> <span class="dt">Legislate</span>
+
+<span class="kw">instance</span> <span class="dt">Enact</span> <span class="dt">Republican</span> <span class="kw">where</span>                     <span class="co">-- type level determination of allowed</span>
+  enact p <span class="fu">=</span> <span class="kw">case</span> govern p <span class="kw">of</span>                        <span class="co">-- policies for Republicans</span>
+    <span class="dt">ThirteenthAmendment</span> <span class="ot">-&gt;</span> <span class="dt">Amend</span>
+    <span class="dt">EstablishNASA</span>       <span class="ot">-&gt;</span> <span class="dt">Subsidize</span></code></pre></td></tr></table></div>
+</section>
+<section id="type-level-functions" class="slide level1">
+<h1>Type-Level Functions</h1>
+<p><code>TypeFamilies</code> and <code>Proxy</code> let Servant compute Authentication types</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">type</span> <span class="dt">AuthAPI</span> <span class="fu">=</span> <span class="st">&quot;private&quot;</span> <span class="fu">:&gt;</span> <span class="dt">AuthProtect</span> <span class="st">&quot;cookie-auth&quot;</span> <span class="fu">:&gt;</span> <span class="dt">PrivateAPI</span>
+          <span class="fu">:&lt;|&gt;</span> <span class="st">&quot;public&quot;</span>  <span class="fu">:&gt;</span> <span class="dt">PublicApi</span>
+
+<span class="co">-- Type Function to compute the type of data returned after authentication</span>
+<span class="kw">type</span> <span class="kw">instance</span> <span class="dt">AuthServerData</span> (<span class="dt">AuthProtect</span> <span class="st">&quot;cookie-auth&quot;</span>) <span class="fu">=</span> <span class="dt">Account</span></code></pre></div>
+<p><code>TypeFamilies</code> allow Servant to have multiple authentication schemes protecting an API</p>
+</section>
+<section id="resources" class="slide level1">
+<h1>Resources</h1>
+<ul>
+<li>Haskell
+<ul>
+<li><a href="https://www.haskell.org/">Haskell Language Site</a></li>
+<li><a href="http://haskellbook.com/">Haskell From First Principles</a></li>
+<li><a href="https://docs.haskellstack.org/en/stable/README/">Stack buid tool</a></li>
+<li><a href="https://github.com/ghcjs/">Haskell to Javascript Compiler</a></li>
+</ul></li>
+<li>Servant
+<ul>
+<li><a href="http://www.arow.info/blog/posts/2015-07-10-servant-intro.html">Servant Intro</a></li>
+<li><a href="https://haskell-servant.readthedocs.io/en/stable/">Servant Documentation</a></li>
+</ul></li>
+<li>Functional Reactive Programming, Reflex
+<ul>
+<li><a href="https://www.manning.com/books/functional-reactive-programming">Manning Book: Functional Reactive Programming</a></li>
+<li><a href="http://www.infoq.com/presentations/functional-techniques-complexity">Ryan Trinkle - Managing Complexity</a></li>
+</ul></li>
+<li><a href="http://research.microsoft.com/en-us/um/people/simonpj/papers/assoc-types/fun-with-type-funs/typefun.pdf">Fun With Type Functions</a></li>
+</ul>
+</section>
+<section id="supplementary-topics" class="slide level1">
+<h1>Supplementary Topics</h1>
+</section>
+<section id="dont-mix-io" class="slide level1">
+<h1>Don’t Mix IO</h1>
+<p>This is not the Haskell way:</p>
+<div class="sourceCode"><pre class="sourceCode java"><code class="sourceCode java"><span class="fu">insertDB</span>(Row, <span class="st">&quot;foo&quot;</span>);
+result = Network.<span class="fu">request</span>(<span class="st">&quot;bar&quot;</span>);
+tryLock { myCriticalVar = result; }
+<span class="kw">catch</span> {blah}</code></pre></div>
+</section>
+<section id="simple-example-shared-state" class="slide level1">
+<h1>Simple Example: Shared State</h1>
+<ul>
+<li>increment the number of <code>u</code>s in <code>yuuuuge</code></li>
+</ul>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">curl</span> localhost:8080/yuge/1
+<span class="st">&quot;not yuge enough!&quot;</span>
+$ <span class="kw">curl</span> localhost:8080/yuge/2
+<span class="st">&quot;yuuge&quot;</span>
+$ <span class="kw">curl</span> localhost:8080/yuge/7
+<span class="st">&quot;yuuuuuuuge&quot;</span>
+$ <span class="kw">curl</span> localhost:8080/yuge/5
+<span class="st">&quot;not yuuuuuuuge enough!&quot;</span></code></pre></div>
+<p>What did we last set <code>yuge</code> to?</p>
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">curl</span> localhost:8080/yuge
+<span class="dt">{&quot;pronunciation&quot;:&quot;yuuuuuuuge&quot;,&quot;howyuge&quot;:7}</span></code></pre></div>
+</section>
+<section id="make-a-variable-in-haskell" class="slide level1">
+<h1>Make a variable in Haskell</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Yuge</span> <span class="fu">=</span> <span class="dt">Yuge</span> {
+<span class="ot">  howyuge ::</span> <span class="dt">Int</span>
+,<span class="ot"> pronunciation ::</span> <span class="dt">Text</span>
+} <span class="kw">deriving</span> (<span class="dt">Generic</span>)
+<span class="kw">instance</span> <span class="dt">ToJSON</span> <span class="dt">Yuge</span>
+
+<span class="kw">type</span> <span class="dt">MyStore</span> <span class="fu">=</span> <span class="dt">TVar</span> <span class="dt">Yuge</span></code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="dt">Yuge</span> {
+   howyuge <span class="fu">=</span> <span class="dv">3</span>
+   pronunciation <span class="fu">=</span> <span class="st">&quot;yuuuge&quot;</span>
+}                    <span class="fu">^^^</span>
+
+
+<span class="dt">MyStore</span> <span class="fu">=</span> <span class="dt">STM</span> container for <span class="dt">Yuge</span></code></pre></div>
+</div>
+</div>
+<ul>
+<li><code>MyStore</code> is like a variable, except better</li>
+<li><code>howyuge</code> and <code>pronunciation</code> will never have a race condition</li>
+<li>STM: “just-works” concurrency
+<ul>
+<li>no event loop spaghetti</li>
+<li>no locking orders</li>
+</ul></li>
+</ul>
+</section>
+<section id="how-do-we-incorporate-this-in-servant" class="slide level1">
+<h1>How do we incorporate this in Servant?</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">makeYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Yuge</span>
+makeYuge numUs <span class="fu">=</span> <span class="dt">Yuge</span> numUs (<span class="st">&quot;y&quot;</span> <span class="fu">&lt;&gt;</span> uuu <span class="fu">&lt;&gt;</span> <span class="st">&quot;ge&quot;</span>)
+  <span class="kw">where</span> uuu <span class="fu">=</span> T.pack <span class="fu">$</span> replicate numUs <span class="ch">&#39;u&#39;</span>
+
+<span class="ot">tryIncreasingYuge ::</span> <span class="dt">Int</span>
+                  <span class="ot">-&gt;</span> <span class="dt">MyStore</span>
+                  <span class="ot">-&gt;</span> <span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">STM</span> <span class="dt">Yuge</span>
+tryIncreasingYuge requestedUs yugeStore <span class="fu">=</span> <span class="kw">do</span>
+  currentYuge <span class="ot">&lt;-</span> read yugeStore
+  <span class="kw">if</span> requestedUs <span class="fu">&lt;=</span> howyuge currentYuge
+    <span class="kw">then</span> throwError
+      err501 { <span class="st">&quot;not &quot;</span> <span class="fu">&lt;&gt;</span> currentYuge <span class="fu">&lt;&gt;</span>  <span class="st">&quot; enough!&quot;</span>}
+    <span class="kw">else</span> <span class="kw">do</span>
+      <span class="kw">let</span> newyuge <span class="fu">=</span> makeYuge requestedUs
+      write yugeStore newyuge
+      return newyuge</code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">makeYuge(numUs) {
+  <span class="dt">Yuge</span>(numUs, (<span class="st">&quot;y&quot;</span> <span class="fu">+</span> <span class="ch">&#39;u&#39;</span> <span class="fu">*</span> numUs <span class="fu">+</span> <span class="st">&quot;ge&quot;</span>))
+} <span class="co">-- returns a Yuge(int, text)</span>
+
+<span class="ot">tryIncreasingYuge ::</span> number <span class="kw">of</span> <span class="dt">Us</span>
+                  <span class="ot">-&gt;</span> global variable
+                  <span class="ot">-&gt;</span> <span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">STM</span> <span class="dt">Yuge</span>
+tryIncreasingYuge(requestedUs, yugeStore) {
+  try to increase yugeStore<span class="fu">:</span>
+  <span class="kw">if</span> requestedYuge <span class="fu">&lt;</span> yugeStore
+      <span class="kw">then</span> error msg
+      <span class="kw">else</span> (<span class="dv">1</span>) perform the update
+           (<span class="dv">2</span>) return the new <span class="dt">Yuge</span>
+}</code></pre></div>
+</div>
+</div>
+<p>Let us first understand this return type</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">tryIncreasingYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">MyStore</span> <span class="ot">-&gt;</span> <span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">STM</span> <span class="dt">Yuge</span>
+tryIncreasingYuge requestedYuge yugeStore <span class="fu">=</span> <span class="fu">???</span></code></pre></div>
+</section>
+<section id="understanding-big-types" class="slide level1">
+<h1>Understanding Big Types</h1>
+<figure>
+<img src="img/except/1.png" style="width:70.0%" />
+</figure>
+</section>
+<section id="understanding-big-types-1" class="slide level1">
+<h1>Understanding Big Types</h1>
+<figure>
+<img src="img/except/2.png" style="width:70.0%" />
+</figure>
+</section>
+<section id="understanding-big-types-2" class="slide level1">
+<h1>Understanding Big Types</h1>
+<figure>
+<img src="img/except/3.png" style="width:70.0%" />
+</figure>
+</section>
+<section id="understanding-big-types-3" class="slide level1">
+<h1>Understanding Big Types</h1>
+<figure>
+<img src="img/except/4.png" style="width:70.0%" />
+</figure>
+</section>
+<section id="understanding-big-types-4" class="slide level1">
+<h1>Understanding Big Types</h1>
+<figure>
+<img src="img/except/5.png" style="width:70.0%" />
+</figure>
+</section>
+<section id="how-do-we-incorporate-this-in-servant-1" class="slide level1">
+<h1>How do we incorporate this in Servant?</h1>
+<div class="mdl-grid">
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">makeYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Yuge</span>
+makeYuge numUs <span class="fu">=</span> <span class="dt">Yuge</span> numUs (<span class="st">&quot;y&quot;</span> <span class="fu">&lt;&gt;</span> uuu <span class="fu">&lt;&gt;</span> <span class="st">&quot;ge&quot;</span>)
+  <span class="kw">where</span> uuu <span class="fu">=</span> T.pack <span class="fu">$</span> replicate numUs <span class="ch">&#39;u&#39;</span>
+
+<span class="ot">tryIncreasingYuge ::</span> <span class="dt">Int</span>
+                  <span class="ot">-&gt;</span> <span class="dt">MyStore</span>
+                  <span class="ot">-&gt;</span> <span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">STM</span> <span class="dt">Yuge</span>
+tryIncreasingYuge requestedUs yugeStore <span class="fu">=</span> <span class="kw">do</span>
+  currentYuge <span class="ot">&lt;-</span> read yugeStore
+  <span class="kw">if</span> requestedUs <span class="fu">&lt;=</span> howyuge currentYuge
+    <span class="kw">then</span> throwError
+      err501 { <span class="st">&quot;not &quot;</span> <span class="fu">&lt;&gt;</span> currentYuge <span class="fu">&lt;&gt;</span>  <span class="st">&quot; enough!&quot;</span>}
+    <span class="kw">else</span> <span class="kw">do</span>
+      <span class="kw">let</span> newyuge <span class="fu">=</span> makeYuge requestedUs
+      write yugeStore newyuge
+      return newyuge</code></pre></div>
+</div>
+<div class="mdl-cell mdl-cell--6-col">
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">makeYuge(numUs) {
+  <span class="dt">Yuge</span>(numUs, (<span class="st">&quot;y&quot;</span> <span class="fu">+</span> <span class="ch">&#39;u&#39;</span> <span class="fu">*</span> numUs <span class="fu">+</span> <span class="st">&quot;ge&quot;</span>))
+} <span class="co">-- returns a Yuge(int, text)</span>
+
+<span class="ot">tryIncreasingYuge ::</span> number <span class="kw">of</span> <span class="dt">Us</span>
+                  <span class="ot">-&gt;</span> global variable
+                  <span class="ot">-&gt;</span> <span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">STM</span> <span class="dt">Yuge</span>
+tryIncreasingYuge(requestedUs, yugeStore) {
+  currentYuge <span class="ot">&lt;-</span> read yugeStore
+  <span class="kw">if</span> requestedUs <span class="fu">&lt;=</span> currentYuge
+    <span class="kw">then</span> throwError
+      err <span class="fu">=</span> current <span class="fu">#</span> <span class="kw">of</span> <span class="ch">&#39;U&#39;</span>s too small
+    <span class="kw">else</span> <span class="kw">do</span>
+      <span class="kw">let</span> newyuge <span class="fu">=</span> makeYuge requestedUs
+      store and return the update
+}</code></pre></div>
+</div>
+</div>
+<figure>
+<img src="img/except/5.png" style="width:40.0%" />
+</figure>
+<!-- * The big type signature `ExceptT ServantErr STM Yuge` says three things to us. We can return a Servant exception, we can return a Yuge, or we can modify in-memory state. -->
+<!-- * We can't `printf` or `launchMissles` or `deleteDatabase` or `reboot` anywhere inside `tryIncreasingYuge`. By reading the type we know that there's no funny business like network connections taking place in the implementation. -->
+<!-- * We know that in `makeYuge` we don't even have the ability to edit an STM variable. It's completely pure. -->
+</section>
+<section id="the-benefit" class="slide level1">
+<h1>The benefit</h1>
+<ul>
+<li>Types determine what operations are permitted
+<ul>
+<li>In the STM monad you can’t do network or database IO</li>
+</ul></li>
+<li>Composable “separation of concerns”</li>
+</ul>
+</section>
+<section id="how-do-we-call-this-from-a-servant-handler" class="slide level1">
+<h1>How do we call this from a Servant handler?</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">setYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">ReaderT</span> <span class="dt">MyStore</span> (<span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">IO</span>) <span class="dt">Text</span>
+setYuge requestedUs <span class="fu">=</span> <span class="kw">do</span>
+  yugeStore <span class="ot">&lt;-</span> ask
+  pronunciation <span class="fu">&lt;$&gt;</span> lift (hoist atomically (tryIncreasingYuge requestedUs yugeStore))</code></pre></div>
+<ul>
+<li>Servant handlers are in IO. This means we have to <code>hoist</code> our monad stack.</li>
+</ul>
+<figure>
+<img src="img/hoist/1.png" style="width:50.0%" />
+</figure>
+</section>
+<section id="how-do-we-call-this-from-a-servant-handler-1" class="slide level1">
+<h1>How do we call this from a Servant handler?</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">setYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">ReaderT</span> <span class="dt">MyStore</span> (<span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">IO</span>) <span class="dt">Text</span>
+setYuge requestedUs <span class="fu">=</span> <span class="kw">do</span>
+  yugeStore <span class="ot">&lt;-</span> ask
+  pronunciation <span class="fu">&lt;$&gt;</span> lift (hoist atomically (tryIncreasingYuge requestedUs yugeStore))</code></pre></div>
+<ul>
+<li>Servant handlers are in IO. This means we have to <code>hoist</code> our monad stack.</li>
+</ul>
+<figure>
+<img src="img/hoist/2.png" style="width:50.0%" />
+</figure>
+</section>
+<section id="how-do-we-call-this-from-a-servant-handler-2" class="slide level1">
+<h1>How do we call this from a Servant handler?</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">setYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">ReaderT</span> <span class="dt">MyStore</span> (<span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">IO</span>) <span class="dt">Text</span>
+setYuge requestedUs <span class="fu">=</span> <span class="kw">do</span>
+  yugeStore <span class="ot">&lt;-</span> ask
+  pronunciation <span class="fu">&lt;$&gt;</span> lift (hoist atomically (tryIncreasingYuge requestedUs yugeStore))</code></pre></div>
+<ul>
+<li>Servant handlers are in IO. This means we have to <code>hoist</code> our monad stack.</li>
+</ul>
+<figure>
+<img src="img/hoist/3.png" style="width:50.0%" />
+</figure>
+</section>
+<section id="how-do-we-call-this-from-a-servant-handler-3" class="slide level1">
+<h1>How do we call this from a Servant handler?</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">setYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">ReaderT</span> <span class="dt">MyStore</span> (<span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">IO</span>) <span class="dt">Text</span>
+setYuge requestedUs <span class="fu">=</span> <span class="kw">do</span>
+  yugeStore <span class="ot">&lt;-</span> ask
+  pronunciation <span class="fu">&lt;$&gt;</span> lift (hoist atomically (tryIncreasingYuge requestedUs yugeStore))</code></pre></div>
+<ul>
+<li>Servant handlers are in IO. This means we have to <code>hoist</code> our monad stack.</li>
+</ul>
+<figure>
+<img src="img/hoist/4.png" style="width:50.0%" />
+</figure>
+</section>
+<section id="how-do-we-call-this-from-a-servant-handler-4" class="slide level1">
+<h1>How do we call this from a Servant handler?</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">setYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">ReaderT</span> <span class="dt">MyStore</span> (<span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">IO</span>) <span class="dt">Text</span>
+setYuge requestedUs <span class="fu">=</span> <span class="kw">do</span>
+  yugeStore <span class="ot">&lt;-</span> ask
+  pronunciation <span class="fu">&lt;$&gt;</span> lift (hoist atomically (tryIncreasingYuge requestedUs yugeStore))</code></pre></div>
+<ul>
+<li>Servant handlers are in IO. This means we have to <code>hoist</code> our monad stack.</li>
+</ul>
+<figure>
+<img src="img/hoist/5.png" style="width:50.0%" />
+</figure>
+</section>
+<section id="how-do-we-call-this-from-a-servant-handler-5" class="slide level1">
+<h1>How do we call this from a Servant handler?</h1>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">setYuge ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">ReaderT</span> <span class="dt">MyStore</span> (<span class="dt">ExceptT</span> <span class="dt">ServantErr</span> <span class="dt">IO</span>) <span class="dt">Text</span>
+setYuge requestedUs <span class="fu">=</span> <span class="kw">do</span>
+  yugeStore <span class="ot">&lt;-</span> ask
+  pronunciation <span class="fu">&lt;$&gt;</span> lift (hoist atomically (tryIncreasingYuge requestedUs yugeStore))</code></pre></div>
+<ul>
+<li>Servant handlers are in IO. This means we have to <code>hoist</code> our monad stack.</li>
+</ul>
+<figure>
+<img src="img/hoist/6.png" style="width:50.0%" />
+</figure>
+</section>
+<section id="these-are-generic-functions" class="slide level1">
+<h1>These are generic functions!</h1>
+<p><img src="img/hoist/lift.png" style="width:60.0%" /> <img src="img/hoist/hoist.png" style="width:70.0%" /></p>
+</section>
+    </div> <!-- end of reveal -->
+
+  </div>
+
+    <script src="reveal.js/lib/js/head.min.js"></script>
+    <script src="reveal.js/js/reveal.min.js"></script>
+    <script src="js/jquery-2.1.4.min.js"></script>
+    <script src="js/material.min.js"></script>
+    <script language="javascript" src="js/all.js"></script>
+    <!--Import jQuery before materialize.js-->
+    <script>
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+
+      // Display controls in the bottom right corner
+      controls: false,
+
+      // Display a presentation progress bar
+      progress: true,
+
+      // Display the page number of the current slide
+      slideNumber: true,
+
+      // Push each slide change to the browser history
+      history: true,
+
+      // Enable keyboard shortcuts for navigation
+      keyboard: true,
+
+      // Enable the slide overview mode
+      overview: true,
+
+      // Vertical centering of slides
+      center: true,
+
+      // Enables touch navigation on devices with touch input
+      touch: true,
+
+      // Loop the presentation
+      loop: false,
+
+      // Change the presentation direction to be RTL
+      rtl: false,
+
+      // Turns fragments on and off globally
+      fragments: true,
+
+      // Flags if the presentation is running in an embedded mode,
+      // i.e. contained within a limited portion of the screen
+      embedded: false,
+
+      // Number of milliseconds between automatically proceeding to the
+      // next slide, disabled when set to 0, this value can be overwritten
+      // by using a data-autoslide attribute on your slides
+      autoSlide: 0,
+
+      // Stop auto-sliding after user input
+      autoSlideStoppable: true,
+
+      // Enable slide navigation via mouse wheel
+      mouseWheel: false,
+
+      // Hides the address bar on mobile devices
+      hideAddressBar: true,
+
+      // Opens links in an iframe preview overlay
+      previewLinks: false,
+
+      // Transition style
+      transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+
+      // Transition speed
+      transitionSpeed: 'default', // default/fast/slow
+
+      // Transition style for full page slide backgrounds
+      backgroundTransition: 'default', // default/none/slide/concave/convex/zoom
+
+        // width: 1920, //1280,
+        // height: 1080, //1024,
+        //width: 1920, height: 1080,
+        //width: 1024, height: 768,
+        width: 1280, height: 720,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.0,
+
+        // Bounds for smallest/largest possible scale to apply to content
+        minScale: 0.5,
+        maxScale: 2.0,
+
+      // Number of slides away from the current that are visible
+      viewDistance: 3,
+
+      // Parallax background image
+      parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'"
+
+      // Parallax background size
+      parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
+
+      dependencies: [
+        // Cross-browser shim that fully implements classList - https://github.com/eligrey/classList.js/
+        { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+
+        // Interpret Markdown in <section> elements
+        //{ src: 'reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+        //{ src: 'reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+
+        // Syntax highlight for <code> elements
+        //{ src: 'reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+
+        // Zoom in and out with Alt+click
+        { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+
+        // Speaker notes
+        //{ src: 'reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+
+        // Remote control your reveal.js presentation using a touch device
+        //{ src: 'reveal.js/plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } },
+
+        // MathJax
+        { src: 'reveal.js/plugin/math/math.js', async: true }
+      ]
+
+      });
+
+    </script>
+</body>
+</html>
